@@ -66,13 +66,28 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
     }
   };
 
-  // Group matches by date
   const groupedMatches = matches.reduce((acc, match) => {
-    const date = new Date(match.kickoff_time).toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
+    const date = new Date(match.kickoff_time).toLocaleDateString('en-US', { day: 'numeric', month: 'long' }).toUpperCase();
     if (!acc[date]) acc[date] = [];
     acc[date].push(match);
     return acc;
   }, {} as Record<string, Match[]>);
+
+  const dates = Object.keys(groupedMatches);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (dates.length > 0 && !selectedDate) {
+      // Default to today if possible, or the first date
+      const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long' }).toUpperCase();
+      setSelectedDate(dates.includes(today) ? today : dates[0]);
+    }
+  }, [dates, selectedDate]);
+
+  const isDummyMatch = (match: Match) => {
+    const kickoff = new Date(match.kickoff_time);
+    return kickoff < new Date('2026-04-03');
+  };
 
   if (loading && matches.length === 0) return <div className="container" style={{ textAlign: 'center', marginTop: '5rem' }}>Loading fixtures...</div>;
 
@@ -85,33 +100,10 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
         <div className="glass-card">
           <h2 className="ucl-title" style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Who will win?</h2>
           <div className="grid" style={{ gap: '0.8rem' }}>
-            <button 
-              className={`ucl-input ${choice === 'HOME' ? 'selected' : ''}`} 
-              onClick={() => setChoice('HOME')}
-            >
-              {selectedMatch.home_team}
-            </button>
-            <button 
-              className={`ucl-input ${choice === 'DRAW' ? 'selected' : ''}`} 
-              onClick={() => setChoice('DRAW')}
-            >
-              THE DRAW
-            </button>
-            <button 
-              className={`ucl-input ${choice === 'AWAY' ? 'selected' : ''}`} 
-              onClick={() => setChoice('AWAY')}
-            >
-              {selectedMatch.away_team}
-            </button>
-            
-            <button 
-              className="ucl-button" 
-              disabled={!choice} 
-              onClick={() => setIsConfirming(true)}
-              style={{ marginTop: '1rem', background: choice ? 'var(--ucl-electric)' : 'rgba(255,255,255,0.1)' }}
-            >
-              CONTINUE
-            </button>
+            <button className={`ucl-input ${choice === 'HOME' ? 'selected' : ''}`} onClick={() => setChoice('HOME')}>{selectedMatch.home_team}</button>
+            <button className={`ucl-input ${choice === 'DRAW' ? 'selected' : ''}`} onClick={() => setChoice('DRAW')}>THE DRAW</button>
+            <button className={`ucl-input ${choice === 'AWAY' ? 'selected' : ''}`} onClick={() => setChoice('AWAY')}>{selectedMatch.away_team}</button>
+            <button className="ucl-button" disabled={!choice} onClick={() => setIsConfirming(true)} style={{ marginTop: '1rem', background: choice ? 'var(--ucl-electric)' : 'rgba(255,255,255,0.1)' }}>CONTINUE</button>
           </div>
         </div>
       </div>
@@ -129,66 +121,76 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
               {choice === 'HOME' ? selectedMatch.home_team : choice === 'AWAY' ? selectedMatch.away_team : 'The Draw'}
             </h3>
           </div>
-          <button className="ucl-button" onClick={handlePredict} disabled={loading} style={{ background: 'var(--ucl-electric)' }}>
-            {loading ? 'SAVING...' : 'PLACE PREDICTION'}
-          </button>
-          <button className="ucl-input" disabled={loading} onClick={() => setIsConfirming(false)} style={{ background: 'none', border: 'none', marginTop: '0.5rem', fontSize: '0.8rem' }}>
-            Go back
-          </button>
+          <button className="ucl-button" onClick={handlePredict} disabled={loading} style={{ background: 'var(--ucl-electric)' }}>{loading ? 'SAVING...' : 'PLACE PREDICTION'}</button>
+          <button className="ucl-input" disabled={loading} onClick={() => setIsConfirming(false)} style={{ background: 'none', border: 'none', marginTop: '0.5rem', fontSize: '0.8rem' }}>Go back</button>
         </div>
       </div>
     );
   }
 
-  const isDummyMatch = (match: Match) => {
-    const kickoff = new Date(match.kickoff_time);
-    return kickoff < new Date('2026-04-03');
-  };
-
   return (
     <div className="container" style={{ maxWidth: '400px', height: '85vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }}>
-        {Object.entries(groupedMatches).map(([date, dateMatches]) => (
-          <div key={date} style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '0.7rem', color: 'var(--ucl-gold)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.3rem' }}>
-              {date}
-            </h3>
-            <div className="grid" style={{ gap: '0.8rem' }}>
-              {dateMatches.map(match => {
-                const userChoice = getUserChoice(match.id);
-                return (
-                  <div key={match.id} className="glass-card" onClick={() => setSelectedMatch(match)} style={{ cursor: 'pointer', padding: '0.8rem', position: 'relative' }}>
-                    {isDummyMatch(match) && (
-                      <div style={{ position: 'absolute', top: '-5px', right: '10px', background: 'var(--ucl-navy)', color: 'white', fontSize: '0.5rem', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--ucl-electric)', fontWeight: 800, zIndex: 10 }}>DUMMY</div>
-                    )}
-                    <div className="match-card" style={{ gap: '0.5rem' }}>
-                      <div className="team-info">
-                        <img src={match.home_logo || ''} width="30" height="30" alt="" style={{ marginBottom: '0.2rem' }} />
-                        <span style={{ fontSize: '0.65rem', fontWeight: 800, textAlign: 'center', lineHeight: 1.1 }}>{match.home_team.split(' ')[0]}</span>
-                      </div>
-                      
-                      <div style={{ textAlign: 'center', minWidth: '40px' }}>
-                        {userChoice ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <CheckCircle2 color="var(--ucl-electric)" size={16} />
-                            <span style={{ fontSize: '0.5rem', color: 'var(--ucl-electric)', fontWeight: 800 }}>PICKED</span>
-                          </div>
-                        ) : (
-                          <div className="vs-badge" style={{ fontSize: '0.5rem', padding: '0.2rem 0.4rem' }}>{match.status === 'LIVE' ? 'LIVE' : 'VS'}</div>
-                        )}
-                      </div>
+      {/* Date Navigation */}
+      <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.8rem', marginBottom: '0.5rem', width: '100%', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {dates.map(date => (
+          <button
+            key={date}
+            onClick={() => setSelectedDate(date)}
+            style={{
+              padding: '0.4rem 0.8rem',
+              borderRadius: '20px',
+              border: '1px solid ' + (selectedDate === date ? 'var(--ucl-electric)' : 'rgba(255,255,255,0.1)'),
+              background: selectedDate === date ? 'var(--ucl-electric)' : 'none',
+              color: selectedDate === date ? 'black' : 'white',
+              fontSize: '0.6rem',
+              fontWeight: 800,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {date === new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long' }).toUpperCase() ? 'TODAY' : date}
+          </button>
+        ))}
+      </div>
 
-                      <div className="team-info">
-                        <img src={match.away_logo || ''} width="30" height="30" alt="" style={{ marginBottom: '0.2rem' }} />
-                        <span style={{ fontSize: '0.65rem', fontWeight: 800, textAlign: 'center', lineHeight: 1.1 }}>{match.away_team.split(' ')[0]}</span>
-                      </div>
+      <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.3rem' }}>
+        {selectedDate && groupedMatches[selectedDate] && (
+          <div className="grid" style={{ gap: '0.8rem' }}>
+            {groupedMatches[selectedDate].map(match => {
+              const userChoice = getUserChoice(match.id);
+              return (
+                <div key={match.id} className="glass-card" onClick={() => setSelectedMatch(match)} style={{ cursor: 'pointer', padding: '0.8rem', position: 'relative' }}>
+                  {isDummyMatch(match) && (
+                    <div style={{ position: 'absolute', top: '-5px', right: '10px', background: 'var(--ucl-navy)', color: 'white', fontSize: '0.5rem', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--ucl-electric)', fontWeight: 800, zIndex: 10 }}>DUMMY</div>
+                  )}
+                  <div className="match-card" style={{ gap: '0.5rem' }}>
+                    <div className="team-info">
+                      <img src={match.home_logo || ''} width="30" height="30" alt="" style={{ marginBottom: '0.2rem' }} />
+                      <span style={{ fontSize: '0.65rem', fontWeight: 800, textAlign: 'center', lineHeight: 1.1 }}>{match.home_team.split(' ')[0]}</span>
+                    </div>
+                    
+                    <div style={{ textAlign: 'center', minWidth: '40px' }}>
+                      {userChoice ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <CheckCircle2 color="var(--ucl-electric)" size={16} />
+                          <span style={{ fontSize: '0.5rem', color: 'var(--ucl-electric)', fontWeight: 800 }}>PICKED</span>
+                        </div>
+                      ) : (
+                        <div className="vs-badge" style={{ fontSize: '0.5rem', padding: '0.2rem 0.4rem' }}>{match.status === 'LIVE' ? 'LIVE' : 'VS'}</div>
+                      )}
+                    </div>
+
+                    <div className="team-info">
+                      <img src={match.away_logo || ''} width="30" height="30" alt="" style={{ marginBottom: '0.2rem' }} />
+                      <span style={{ fontSize: '0.65rem', fontWeight: 800, textAlign: 'center', lineHeight: 1.1 }}>{match.away_team.split(' ')[0]}</span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
