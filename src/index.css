@@ -18,7 +18,7 @@
 
 body {
   font-family: var(--font-family);
-  background: url('/background.png') no-repeat center center fixed;
+  background: #008232 url('/background.png') no-repeat top center fixed;
   background-size: cover;
   color: var(--ucl-white);
   min-height: 100vh;
@@ -26,12 +26,12 @@ body {
 }
 
 .glass-card {
-  background: var(--ucl-glass);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--ucl-glass-border);
-  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
   padding: 1.5rem;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 .ucl-button {
@@ -58,15 +58,17 @@ body {
 }
 
 .ucl-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--ucl-glass-border);
-  border-radius: 8px;
-  padding: 0.8rem 1rem;
-  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  color: white !important;
   width: 100%;
   font-size: 1rem;
+  font-weight: 700;
   outline: none;
-  transition: border-color 0.2s;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .ucl-input:focus {
