@@ -50,7 +50,7 @@ export const Registration: React.FC<Props> = ({ onComplete }) => {
   };
 
   return (
-    <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(10vh - 20px)' }}>
+    <div className="container" style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(10vh - 20px)' }}>
       <div className="glass-card" style={{ padding: '2rem 1.5rem', width: 'calc(100% - 2rem)', maxWidth: '400px', borderRadius: '24px' }}>
         <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
           <h1 className="ucl-title" style={{ fontSize: '1.4rem', marginBottom: '0.2rem' }}>Welcome to the Game</h1>

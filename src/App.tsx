@@ -78,7 +78,7 @@ function App() {
         )}
       </nav>
 
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '1rem' }}>
+      <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '1rem 0.5rem' }}>
         {!registration ? (
           <Registration onComplete={handleRegistrationComplete} />
         ) : (
