@@ -115,8 +115,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
         <div 
           className="glass-card" 
           style={{ 
-            width: 'calc(100% - 2rem)', 
-            maxWidth: '400px',
+            width: '100%', 
             padding: '2rem 1.5rem', 
             borderRadius: '24px',
             boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
@@ -124,7 +123,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            minHeight: '400px'
+            minHeight: '0'
           }}
         >
           <h2 className="ucl-title" style={{ fontSize: '1.8rem', marginBottom: '2rem', textAlign: 'center' }}>Who will win?</h2>
@@ -262,8 +261,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
                     cursor: locked ? 'default' : 'pointer', 
                     padding: '2rem 1.5rem', 
                     position: 'relative', 
-                    width: 'calc(100% - 2rem)',
-                    maxWidth: '400px',
+                    width: '100%',
                     borderRadius: '24px',
                     border: '1px solid rgba(255,255,255,0.15)',
                     boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
