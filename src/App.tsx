@@ -3,6 +3,7 @@ import { Registration } from './components/Registration';
 import { MatchSelection } from './components/MatchSelection';
 import { LiveMatch } from './components/LiveMatch';
 import { AdminDashboard } from './components/AdminDashboard';
+import { Leaderboard } from './components/Leaderboard';
 import type { Database } from './types/database';
 
 type RegistrationType = Database['public']['Tables']['registrations']['Row'];
@@ -14,7 +15,7 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [isAdmin] = useState(() => window.location.hash === '#admin');
-  const [view, setView] = useState<'selection' | 'live'>('selection');
+  const [view, setView] = useState<'selection' | 'live' | 'leaderboard'>('selection');
   const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
 
   const handleRegistrationComplete = (data: RegistrationType) => {
@@ -32,64 +33,76 @@ function App() {
   }
 
   return (
-    <main>
-      <nav className="glass-card" style={{ borderRadius: '0', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <img src="https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg" alt="UCL Logo" width="40" height="40" style={{ filter: 'brightness(0) invert(1)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontWeight: 800, letterSpacing: '2px', fontSize: '1.2rem', background: 'linear-gradient(to right, #fff, #888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              UCL INTERACTIVE
-            </span>
-          </div>
+    <main style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <nav className="glass-card" style={{ borderRadius: '0', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1.5rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          <img src="https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg" alt="UCL Logo" width="30" height="30" style={{ filter: 'brightness(0) invert(1)' }} />
+          <span style={{ fontWeight: 800, letterSpacing: '1px', fontSize: '1rem', color: 'white' }}>
+            UCL LIVE
+          </span>
         </div>
         
         {registration && (
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '0.3rem' }}>
               <button 
                 onClick={() => setView('selection')} 
                 className={`ucl-button ${view === 'selection' ? '' : 'inactive'}`}
-                style={{ padding: '0.4rem 0.8rem', fontSize: '0.6rem', border: view === 'selection' ? 'none' : '1px solid var(--ucl-glass-border)', background: view === 'selection' ? 'var(--ucl-electric)' : 'none' }}
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
               >
-                PREDICT
+                GAMES
               </button>
               <button 
                 onClick={() => setView('live')} 
                 className={`ucl-button ${view === 'live' ? '' : 'inactive'}`}
-                style={{ padding: '0.4rem 0.8rem', fontSize: '0.6rem', border: view === 'live' ? 'none' : '1px solid var(--ucl-glass-border)', background: view === 'live' ? 'var(--ucl-electric)' : 'none' }}
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
               >
                 LIVE
+              </button>
+              <button 
+                onClick={() => setView('leaderboard')} 
+                className={`ucl-button ${view === 'leaderboard' ? '' : 'inactive'}`}
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
+              >
+                RANKS
               </button>
             </div>
             <button 
               onClick={resetRegistration} 
-              style={{ background: 'none', border: 'none', color: 'var(--ucl-silver)', fontSize: '0.7rem', textDecoration: 'underline', cursor: 'pointer' }}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', textDecoration: 'underline', fontSize: '0.6rem', cursor: 'pointer' }}
             >
-              Log out
+              LOGOUT
             </button>
           </div>
         )}
       </nav>
 
-      {!registration ? (
-        <Registration onComplete={handleRegistrationComplete} />
-      ) : (
-        view === 'selection' ? (
-          <MatchSelection 
-            registration={registration} 
-            onPredictionComplete={(match) => {
-              setCurrentMatch(match);
-              setView('live');
-            }} 
-          />
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        {!registration ? (
+          <Registration onComplete={handleRegistrationComplete} />
         ) : (
-          <LiveMatch 
-            registration={registration} 
-            match={currentMatch} 
-            onBack={() => setView('selection')} 
-          />
-        )
-      )}
+          view === 'selection' ? (
+            <MatchSelection 
+              registration={registration} 
+              onPredictionComplete={(match) => {
+                setCurrentMatch(match);
+                setView('live');
+              }} 
+            />
+          ) : view === 'live' ? (
+            <LiveMatch 
+              registration={registration} 
+              match={currentMatch} 
+              onBack={() => setView('selection')} 
+            />
+          ) : (
+            <Leaderboard 
+              registration={registration} 
+              onBack={() => setView('selection')} 
+            />
+          )
+        )}
+      </div>
     </main>
   );
 }
