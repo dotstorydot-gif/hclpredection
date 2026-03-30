@@ -63,7 +63,7 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '400px', height: '85vh', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1vh' }}>
+    <div className="container" style={{ maxWidth: '400px', height: '85vh', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', cursor: 'pointer', padding: '0.5rem' }}>
         <ArrowLeft size={14} /> BACK TO LIST
       </button>
