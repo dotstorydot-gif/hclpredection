@@ -31,7 +31,6 @@ function App() {
 
   return (
     <main>
-      <div className="star-background" />
       <nav className="glass-card" style={{ borderRadius: '0', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <img src="https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg" alt="UCL Logo" width="40" height="40" style={{ filter: 'brightness(0) invert(1)' }} />
