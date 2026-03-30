@@ -95,8 +95,20 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
         </button>
       </div>
 
-      <div className="glass-card" style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', minHeight: '0' }}>
-        <h2 style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '1.2rem', color: 'var(--ucl-gold)', textAlign: 'center', fontWeight: 900 }}>
+      <div 
+        className="glass-card" 
+        style={{ 
+          width: '100%',
+          padding: '2rem 1.5rem', 
+          borderRadius: '24px',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          display: 'flex', 
+          flexDirection: 'column', 
+          minHeight: '400px' 
+        }}
+      >
+        <h2 style={{ fontSize: '1.2rem', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '1.5rem', color: 'var(--ucl-gold)', textAlign: 'center', fontWeight: 900 }}>
           {tab === 'buzzer' ? '⚡️ FASTEST CLICK RANKING ⚡️' : '🏆 GLOBAL PREDICTION RANKING 🏆'}
         </h2>
 
@@ -140,8 +152,20 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
         )}
       </div>
 
-      <button onClick={onBack} className="ucl-button" style={{ marginTop: '0.8rem', background: 'none', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.7rem' }}>
-        BACK TO GAME
+      <button 
+        onClick={onBack} 
+        style={{ 
+          background: 'none', 
+          border: 'none', 
+          color: 'white', 
+          opacity: 0.5, 
+          fontSize: '0.8rem', 
+          fontWeight: 800,
+          marginTop: '1rem',
+          cursor: 'pointer'
+        }}
+      >
+        &larr; BACK TO GAME
       </button>
     </div>
   );

@@ -205,15 +205,12 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
             border: 'none', 
             color: 'white', 
             opacity: 0.5, 
-            fontSize: '1rem', 
+            fontSize: '0.8rem', 
             cursor: 'pointer', 
-            fontWeight: 900,
+            fontWeight: 800,
             textAlign: 'center',
             width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem'
+            marginTop: '1rem'
           }}
         >
           &larr; BACK
@@ -224,18 +221,65 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
 
   if (selectedMatch && isConfirming) {
     return (
-      <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh' }}>
-        <div className="glass-card" style={{ textAlign: 'center' }}>
-          <h2 className="ucl-title" style={{ fontSize: '1.5rem' }}>Confirm Choice</h2>
+      <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh', gap: '1rem' }}>
+        <div 
+          className="glass-card" 
+          style={{ 
+            width: '100%', 
+            padding: '2rem 1.5rem', 
+            borderRadius: '24px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            minHeight: '0',
+            textAlign: 'center'
+          }}
+        >
+          <h2 className="ucl-title" style={{ fontSize: '1.8rem', marginBottom: '2rem' }}>Confirm Choice</h2>
           <div style={{ margin: '1.5rem 0' }}>
-            <p style={{ opacity: 0.6, fontSize: '0.8rem' }}>You predict</p>
-            <h3 style={{ fontSize: '1.8rem', margin: '0.5rem 0', color: 'var(--ucl-white)' }}>
+            <p style={{ opacity: 0.6, fontSize: '0.8rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>You predict</p>
+            <h3 style={{ fontSize: '1.8rem', margin: '0.5rem 0', color: 'var(--ucl-white)', fontWeight: 900 }}>
               {choice === 'HOME' ? selectedMatch.home_team : choice === 'AWAY' ? selectedMatch.away_team : 'The Draw'}
             </h3>
           </div>
-          <button className="ucl-button" onClick={handlePredict} disabled={loading} style={{ background: 'var(--ucl-electric)' }}>{loading ? 'SAVING...' : 'PLACE PREDICTION'}</button>
-          <button className="ucl-input" disabled={loading} onClick={() => setIsConfirming(false)} style={{ background: 'none', border: 'none', marginTop: '0.5rem', fontSize: '0.8rem' }}>Go back</button>
+          <button 
+            className="ucl-button" 
+            onClick={handlePredict} 
+            disabled={loading} 
+            style={{ 
+              background: 'var(--ucl-electric)', 
+              color: 'black', 
+              width: '100%', 
+              padding: '1.2rem', 
+              fontSize: '1.1rem', 
+              fontWeight: 900,
+              letterSpacing: '1px'
+            }}
+          >
+            {loading ? 'SAVING...' : 'PLACE PREDICTION'}
+          </button>
         </div>
+        
+        <button 
+          disabled={loading} 
+          onClick={() => setIsConfirming(false)} 
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            color: 'white', 
+            opacity: 0.5, 
+            fontSize: '1rem', 
+            cursor: 'pointer', 
+            fontWeight: 900,
+            textAlign: 'center',
+            width: '100%',
+            marginTop: '1rem'
+          }}
+        >
+          &larr; GO BACK
+        </button>
       </div>
     );
   }
@@ -259,7 +303,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
                   onClick={() => !locked && setSelectedMatch(match)} 
                   style={{ 
                     cursor: locked ? 'default' : 'pointer', 
-                    padding: '2rem 1.5rem', 
+                    padding: '2.5rem 1.5rem', 
                     position: 'relative', 
                     width: '100%',
                     borderRadius: '24px',
