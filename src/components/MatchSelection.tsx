@@ -93,33 +93,48 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
 
   if (selectedMatch && !isConfirming) {
     return (
-      <div className="container" style={{ maxWidth: '450px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div className="container" style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div 
           className="glass-card" 
           style={{ 
             width: '100%', 
-            padding: '2.5rem 1.5rem', 
-            borderRadius: '24px',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-            border: '1px solid rgba(255,255,255,0.15)'
+            padding: '3rem 2rem', 
+            borderRadius: '28px',
+            boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
+            border: '1px solid rgba(255,255,255,0.2)'
           }}
         >
-          <h2 className="ucl-title" style={{ fontSize: '1.8rem', marginBottom: '2rem', textAlign: 'center' }}>Who will win?</h2>
+          <h2 className="ucl-title" style={{ fontSize: '2rem', marginBottom: '2.5rem', textAlign: 'center' }}>Who will win?</h2>
           
-          <div className="grid" style={{ gap: '1rem' }}>
+          <div className="grid" style={{ gap: '1.2rem', width: '100%' }}>
             <button 
               className={`ucl-input ${choice === 'HOME' ? 'selected' : ''}`} 
               onClick={() => setChoice('HOME')}
-              style={{ padding: '0.8rem', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}
+              style={{ 
+                padding: '1.2rem', 
+                height: 'auto', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '1.2rem',
+                width: '100%'
+              }}
             >
-              <img src={selectedMatch.home_logo || ''} width="35" height="35" alt="" />
-              <span style={{ fontSize: '1rem', fontWeight: 800 }}>{selectedMatch.home_team.toUpperCase()}</span>
+              <img src={selectedMatch.home_logo || ''} width="40" height="40" alt="" />
+              <span style={{ fontSize: '1.1rem', fontWeight: 900, letterSpacing: '0.5px' }}>{selectedMatch.home_team.toUpperCase()}</span>
             </button>
 
             <button 
               className={`ucl-input ${choice === 'DRAW' ? 'selected' : ''}`} 
               onClick={() => setChoice('DRAW')}
-              style={{ fontSize: '1rem', fontWeight: 800, padding: '1rem' }}
+              style={{ 
+                fontSize: '1.1rem', 
+                fontWeight: 900, 
+                padding: '1.2rem', 
+                textAlign: 'center',
+                letterSpacing: '0.5px',
+                width: '100%'
+              }}
             >
               THE DRAW
             </button>
@@ -127,10 +142,18 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
             <button 
               className={`ucl-input ${choice === 'AWAY' ? 'selected' : ''}`} 
               onClick={() => setChoice('AWAY')}
-              style={{ padding: '0.8rem', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}
+              style={{ 
+                padding: '1.2rem', 
+                height: 'auto', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '1.2rem',
+                width: '100%'
+              }}
             >
-              <img src={selectedMatch.away_logo || ''} width="35" height="35" alt="" />
-              <span style={{ fontSize: '1rem', fontWeight: 800 }}>{selectedMatch.away_team.toUpperCase()}</span>
+              <img src={selectedMatch.away_logo || ''} width="40" height="40" alt="" />
+              <span style={{ fontSize: '1.1rem', fontWeight: 900, letterSpacing: '0.5px' }}>{selectedMatch.away_team.toUpperCase()}</span>
             </button>
             
             <button 
@@ -141,10 +164,11 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
                 marginTop: '1.5rem', 
                 background: choice ? 'var(--ucl-electric)' : 'rgba(255,255,255,0.1)',
                 color: choice ? 'black' : 'white',
-                padding: '1.2rem',
-                fontSize: '1rem',
+                padding: '1.4rem',
+                fontSize: '1.1rem',
                 fontWeight: 900,
-                letterSpacing: '1px'
+                letterSpacing: '1px',
+                width: '100%'
               }}
             >
               CONTINUE
@@ -157,10 +181,12 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
                 border: 'none', 
                 color: 'white', 
                 opacity: 0.5, 
-                fontSize: '0.9rem', 
-                marginTop: '1rem',
+                fontSize: '1rem', 
+                marginTop: '1.5rem',
                 cursor: 'pointer',
-                fontWeight: 800
+                fontWeight: 900,
+                textAlign: 'center',
+                width: '100%'
               }}
             >
               &larr; BACK
