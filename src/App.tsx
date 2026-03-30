@@ -43,56 +43,58 @@ function App() {
         background: '#004d1e', // Heineken Dark Green
         borderBottom: '1px solid rgba(255,255,255,0.1)', 
         display: 'flex', 
-        justifyContent: 'space-between', 
+        justifyContent: 'center', // Center title
         alignItems: 'center', 
         padding: '1rem 1.5rem', 
-        flexShrink: 0 
+        flexShrink: 0
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
-          <span style={{ fontWeight: 800, letterSpacing: '1px', fontSize: '1rem', color: 'white', textTransform: 'uppercase' }}>
-            PREDICT AND WIN
-          </span>
-        </div>
+        <span style={{ 
+          fontWeight: 800, 
+          letterSpacing: '1px', 
+          fontSize: '1rem', 
+          color: 'white', 
+          textTransform: 'uppercase',
+          position: registration ? 'static' : 'absolute',
+          left: registration ? 'auto' : '50%',
+          transform: registration ? 'none' : 'translateX(-50%)',
+          width: registration ? 'auto' : 'max-content'
+        }}>
+          PREDICT AND WIN
+        </span>
         
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-          {registration ? (
-            <>
-              <div style={{ display: 'flex', gap: '0.3rem' }}>
-                <button 
-                  onClick={() => setView('selection')} 
-                  className={`ucl-button ${view === 'selection' ? '' : 'inactive'}`}
-                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
-                >
-                  GAMES
-                </button>
-                <button 
-                  onClick={() => setView('live')} 
-                  className={`ucl-button ${view === 'live' ? '' : 'inactive'}`}
-                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
-                >
-                  LIVE
-                </button>
-                <button 
-                  onClick={() => setView('leaderboard')} 
-                  className={`ucl-button ${view === 'leaderboard' ? '' : 'inactive'}`}
-                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
-                >
-                  RANKS
-                </button>
-              </div>
+        {registration && (
+          <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginLeft: 'auto' }}>
+            <div style={{ display: 'flex', gap: '0.3rem' }}>
               <button 
-                onClick={resetRegistration} 
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', textDecoration: 'underline', fontSize: '0.6rem', cursor: 'pointer', fontWeight: 700 }}
+                onClick={() => setView('selection')} 
+                className={`ucl-button ${view === 'selection' ? '' : 'inactive'}`}
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
               >
-                LOGOUT
+                GAMES
               </button>
-            </>
-          ) : (
-            <span style={{ fontSize: '0.7rem', color: 'var(--ucl-gold)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
-              LOGIN
-            </span>
-          )}
-        </div>
+              <button 
+                onClick={() => setView('live')} 
+                className={`ucl-button ${view === 'live' ? '' : 'inactive'}`}
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
+              >
+                LIVE
+              </button>
+              <button 
+                onClick={() => setView('leaderboard')} 
+                className={`ucl-button ${view === 'leaderboard' ? '' : 'inactive'}`}
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
+              >
+                RANKS
+              </button>
+            </div>
+            <button 
+              onClick={resetRegistration} 
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', textDecoration: 'underline', fontSize: '0.6rem', cursor: 'pointer', fontWeight: 700 }}
+            >
+              LOGOUT
+            </button>
+          </div>
+        )}
       </nav>
 
       <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '1rem 0.5rem' }}>
