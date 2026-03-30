@@ -6,6 +6,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import type { Database } from './types/database';
 
 type RegistrationType = Database['public']['Tables']['registrations']['Row'];
+type Match = Database['public']['Tables']['matches']['Row'];
 
 function App() {
   const [registration, setRegistration] = useState<RegistrationType | null>(() => {
@@ -14,6 +15,7 @@ function App() {
   });
   const [isAdmin] = useState(() => window.location.hash === '#admin');
   const [view, setView] = useState<'selection' | 'live'>('selection');
+  const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
 
   const handleRegistrationComplete = (data: RegistrationType) => {
     setRegistration(data);
@@ -73,9 +75,19 @@ function App() {
         <Registration onComplete={handleRegistrationComplete} />
       ) : (
         view === 'selection' ? (
-          <MatchSelection registration={registration} onPredictionComplete={() => setView('live')} />
+          <MatchSelection 
+            registration={registration} 
+            onPredictionComplete={(match) => {
+              setCurrentMatch(match);
+              setView('live');
+            }} 
+          />
         ) : (
-          <LiveMatch registration={registration} />
+          <LiveMatch 
+            registration={registration} 
+            match={currentMatch} 
+            onBack={() => setView('selection')} 
+          />
         )
       )}
     </main>

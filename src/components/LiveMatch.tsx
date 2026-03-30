@@ -1,194 +1,136 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/database';
-import { Trophy, Zap } from 'lucide-react';
+import { Trophy, Clock, ArrowLeft } from 'lucide-react';
 
-type Match = Database['public']['Tables']['matches']['Row'];
 type Registration = Database['public']['Tables']['registrations']['Row'];
+type Match = Database['public']['Tables']['matches']['Row'];
 
 interface Props {
   registration: Registration;
+  match: Match | null;
+  onBack: () => void;
 }
 
-export const LiveMatch: React.FC<Props> = ({ registration }) => {
-  const [activeMatch, setActiveMatch] = useState<Match | null>(null);
-  const [buzzed, setBuzzed] = useState(false);
-  const [winner, setWinner] = useState<{ name: string; hit_time: string } | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
+  const [isBuzzerActive, setIsBuzzerActive] = useState(false);
+  const [hasHit, setHasHit] = useState(false);
+  const [winner, setWinner] = useState<{ name: string; time: number } | null>(null);
 
   useEffect(() => {
-    fetchActiveMatch();
+    if (!match) return;
 
-    // Subscribe to realtime changes on the matches table
-    const subscription = supabase
-      .channel('live-matches')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, (payload) => {
-        const updatedMatch = payload.new as Match;
-        setActiveMatch(updatedMatch);
-        
-        // Reset buzzed state if buzzer becomes active
-        if (updatedMatch.buzzer_active) {
-          setBuzzed(false);
-          setWinner(null);
-          if (audioRef.current) audioRef.current.play().catch(() => {});
-        }
+    // Listen for buzzer activation for THIS specific match
+    const channel = supabase.channel(`match-${match.id}`)
+      .on('broadcast', { event: 'activate-buzzer' }, () => {
+        setIsBuzzerActive(true);
+        setHasHit(false);
+        setWinner(null);
       })
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, []);
-
-  const fetchActiveMatch = async () => {
-    const { data, error } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('status', 'LIVE')
-      .single();
-    
-    if (!error && data) setActiveMatch(data);
-  };
+  }, [match]);
 
   const handleBuzzerHit = async () => {
-    if (!activeMatch || buzzed) return;
-    
-    setBuzzed(true);
-    try {
-      const { error } = await supabase
-        .from('buzzer_hits')
-        .insert({
-          match_id: activeMatch.id,
-          registration_id: registration.id,
-          venue_id: registration.venue_id,
-          hit_time: new Date().toISOString(),
-        });
-      
-      if (error) throw error;
+    if (!isBuzzerActive || hasHit || !match) return;
 
-      // Immediately check for the winner in this venue
-      const { data: winnerData } = await supabase
-        .from('buzzer_hits')
-        .select('*, registrations(name)')
-        .eq('match_id', activeMatch.id)
-        .eq('venue_id', registration.venue_id)
-        .order('hit_time', { ascending: true })
-        .limit(1)
-        .single();
+    const hitTime = Date.now();
+    setHasHit(true);
+
+    try {
+      await supabase.from('buzzer_hits').insert({
+        registration_id: registration.id,
+        match_id: match.id,
+        hit_timestamp: new Date(hitTime).toISOString(),
+        venue_id: registration.venue_id
+      });
       
-      if (winnerData) {
-        const winner = winnerData as unknown as { registrations: { name: string }; hit_time: string };
-        setWinner({
-          name: winner.registrations.name,
-          hit_time: winner.hit_time
-        });
-      }
-    } catch (err) {
-      console.error(err);
+      // Auto-hide buzzer after hit
+      setTimeout(() => setIsBuzzerActive(false), 2000);
+    } catch (error) {
+      console.error('Buzzer hit failed:', error);
     }
   };
 
-  if (!activeMatch) return (
-    <div className="container" style={{ textAlign: 'center', marginTop: '5rem' }}>
-      <div className="glass-card">
-        <p>Stay tuned! No matches are live right now.</p>
-        <p style={{ fontSize: '0.8rem', opacity: 0.5, marginTop: '1rem' }}>Registered at: {registration.venue_id}</p>
+  if (!match) {
+    return (
+      <div className="container" style={{ textAlign: 'center', marginTop: '10vh' }}>
+        <p>No match selected for live tracking.</p>
+        <button onClick={onBack} className="ucl-button" style={{ marginTop: '1rem' }}>GO TO FIXTURES</button>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="container">
-      <audio ref={audioRef} src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" />
-      
-      <div className="glass-card" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-          <div>
-            <div className="team-logo">{activeMatch.home_logo ? <img src={activeMatch.home_logo} width="50" alt="" /> : activeMatch.home_team.substring(0,3)}</div>
-            <p style={{ fontWeight: 700, marginTop: '0.5rem' }}>{activeMatch.home_team}</p>
-          </div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 900, display: 'flex', gap: '1rem' }}>
-            <span>{activeMatch.home_score}</span>
-            <span>-</span>
-            <span>{activeMatch.away_score}</span>
-          </div>
-          <div>
-            <div className="team-logo">{activeMatch.away_logo ? <img src={activeMatch.away_logo} width="50" alt="" /> : activeMatch.away_team.substring(0,3)}</div>
-            <p style={{ fontWeight: 700, marginTop: '0.5rem' }}>{activeMatch.away_team}</p>
-          </div>
-        </div>
-        <div className="vs-badge" style={{ background: 'red', color: 'white' }}>LIVE</div>
-      </div>
+    <div className="container" style={{ maxWidth: '400px', height: '85vh', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1vh' }}>
+      <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', cursor: 'pointer', padding: '0.5rem' }}>
+        <ArrowLeft size={14} /> BACK TO LIST
+      </button>
 
-      {activeMatch.buzzer_active ? (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem' }}>
-          <h2 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--ucl-gold)', animation: 'pulse 1s infinite' }}>GOAL scored!!!</h2>
-          
-          <button 
-            onClick={handleBuzzerHit} 
-            disabled={buzzed}
-            style={{
-              width: '250px',
-              height: '250px',
-              borderRadius: '50%',
-              background: buzzed ? '#333' : 'radial-gradient(circle, #ffd700, #c5a059)',
-              border: '10px solid rgba(255,255,255,0.2)',
-              boxShadow: buzzed ? 'none' : '0 0 50px rgba(197, 160, 89, 0.6)',
-              cursor: buzzed ? 'default' : 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              transition: 'all 0.3s'
-            }}
-          >
-            {buzzed ? (
-              winner ? (
-                <>
-                  <div style={{ fontSize: '3rem' }}>🏆</div>
-                  <p style={{ fontWeight: 800 }}>WINNER: {winner.name}</p>
-                </>
-              ) : (
-                <p style={{ fontWeight: 800 }}>WAITING...</p>
-              )
-            ) : (
-              <>
-                <Zap size={60} fill="white" />
-                <p style={{ fontWeight: 900, fontSize: '1.5rem', marginTop: '1rem' }}>PUSH!</p>
-              </>
-            )}
-          </button>
-          
-          <p style={{ opacity: 0.7 }}>The fastest response at {registration.venue_id} wins!</p>
+      <div className="glass-card" style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '0' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.5rem', marginBottom: '0.8rem' }}>
+            <img src={match.home_logo || ''} width="50" alt="" />
+            <span style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--ucl-silver)' }}>VS</span>
+            <img src={match.away_logo || ''} width="50" alt="" />
+          </div>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.4rem' }}>
+            {match.home_team} vs {match.away_team}
+          </h2>
+          <div style={{ display: 'inline-block', padding: '0.2rem 1rem', background: 'rgba(255,0,0,0.2)', color: 'red', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800 }}>
+            LIVE NOW
+          </div>
         </div>
-      ) : (
-        <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.3 }}>⚽</div>
-          <h3>Watching the Match...</h3>
-          <p style={{ opacity: 0.5 }}>Get ready! The buzzer will appear when a goal is scored.</p>
-        </div>
-      )}
 
-      {winner && (
-        <div className="glass-card" style={{ marginTop: '2rem', background: 'rgba(197, 160, 89, 0.1)', borderColor: 'var(--ucl-gold)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <Trophy color="var(--ucl-gold)" />
-            <div>
-              <p style={{ fontSize: '0.8rem', opacity: 0.8 }}>Latest Venue Winner:</p>
-              <p style={{ fontWeight: 800, fontSize: '1.2rem' }}>{winner.name}</p>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          {isBuzzerActive ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+              <button
+                onClick={handleBuzzerHit}
+                disabled={hasHit}
+                className="ucl-button"
+                style={{
+                  width: '180px',
+                  height: '180px',
+                  borderRadius: '50%',
+                  fontSize: '1.5rem',
+                  background: hasHit ? 'rgba(255,255,255,0.1)' : 'radial-gradient(circle, #ff0000, #b30000)',
+                  boxShadow: hasHit ? 'none' : '0 0 50px rgba(255, 0, 0, 0.5)',
+                  animation: hasHit ? 'none' : 'pulse 1s infinite',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  border: '8px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                {hasHit ? 'RECORDED!' : 'GOAL! HIT!'}
+                {!hasHit && <Trophy size={28} />}
+              </button>
+              <p style={{ color: 'var(--ucl-gold)', fontWeight: 800, fontSize: '0.7rem', textAlign: 'center' }}>
+                BE THE FASTEST AT {registration.venue_id.toUpperCase()}!
+              </p>
             </div>
+          ) : (
+            <div style={{ textAlign: 'center', opacity: 0.8 }}>
+              <Clock size={40} style={{ color: 'var(--ucl-gold)', marginBottom: '0.8rem' }} />
+              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.4rem' }}>Waiting for Goal...</h3>
+              <p style={{ fontSize: '0.75rem', opacity: 0.6, maxWidth: '240px' }}>Stay alert! The buzzer activates instantly when a goal is scored.</p>
+            </div>
+          )}
+        </div>
+
+        <div style={{ marginTop: '1rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.65rem', fontWeight: 800 }}>
+            <span style={{ opacity: 0.6 }}>PREDICTION STATUS</span>
+            <span style={{ color: 'var(--ucl-gold)' }}>LOCKED & LIVE</span>
           </div>
         </div>
-      )}
-      
-      <style>{`
-        @keyframes pulse {
-          0% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.1); opacity: 0.8; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
+      </div>
     </div>
   );
 };
