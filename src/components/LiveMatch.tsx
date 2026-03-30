@@ -15,7 +15,6 @@ interface Props {
 export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
   const [isBuzzerActive, setIsBuzzerActive] = useState(false);
   const [hasHit, setHasHit] = useState(false);
-  const [winner, setWinner] = useState<{ name: string; time: number } | null>(null);
 
   useEffect(() => {
     if (!match) return;
@@ -25,7 +24,6 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
       .on('broadcast', { event: 'activate-buzzer' }, () => {
         setIsBuzzerActive(true);
         setHasHit(false);
-        setWinner(null);
       })
       .subscribe();
 

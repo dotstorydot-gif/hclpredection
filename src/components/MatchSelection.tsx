@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/database';
-import { CheckCircle2, ChevronRight } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 type Match = Database['public']['Tables']['matches']['Row'];
 type Registration = Database['public']['Tables']['registrations']['Row'];
@@ -20,11 +20,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
   const [choice, setChoice] = useState<'HOME' | 'AWAY' | 'DRAW' | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     const [{ data: matchData }, { data: predData }] = await Promise.all([
       supabase.from('matches').select('*').order('kickoff_time', { ascending: true }),
       supabase.from('predictions').select('*').eq('registration_id', registration.id)
@@ -33,7 +29,11 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
     setMatches(matchData || []);
     setPredictions(predData || []);
     setLoading(false);
-  };
+  }, [registration.id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const getUserChoice = (matchId: string) => {
     return predictions.find(p => p.match_id === matchId)?.winner_choice;

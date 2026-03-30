@@ -4,7 +4,6 @@ import type { Database } from '../types/database';
 import { Trophy, Zap, Target } from 'lucide-react';
 
 type Registration = Database['public']['Tables']['registrations']['Row'];
-type Match = Database['public']['Tables']['matches']['Row'];
 
 interface Props {
   registration: Registration;
@@ -40,7 +39,7 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
           .limit(10);
         
         const winners = (data || []).map(d => ({
-          name: (d.registrations as any)?.name || 'Anonymous',
+          name: (d.registrations as unknown as { name: string })?.name || 'Anonymous',
           hit_timestamp: d.hit_time || '',
           venue_id: d.venue_id
         }));
