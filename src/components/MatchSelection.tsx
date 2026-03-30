@@ -129,66 +129,67 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
   }
 
   return (
-    <div className="container" style={{ maxWidth: '400px', height: '85vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Date Navigation */}
-      <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.8rem', marginBottom: '0.5rem', width: '100%', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {dates.map(date => (
-          <button
-            key={date}
-            onClick={() => setSelectedDate(date)}
-            style={{
-              padding: '0.4rem 0.8rem',
-              borderRadius: '20px',
-              border: '1px solid ' + (selectedDate === date ? 'var(--ucl-electric)' : 'rgba(255,255,255,0.1)'),
-              background: selectedDate === date ? 'var(--ucl-electric)' : 'none',
-              color: selectedDate === date ? 'black' : 'white',
-              fontSize: '0.6rem',
-              fontWeight: 800,
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {date === new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long' }).toUpperCase() ? 'TODAY' : date}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ flex: 1, overflowY: 'auto', paddingRight: '0.3rem' }}>
-        {selectedDate && groupedMatches[selectedDate] && (
-          <div className="grid" style={{ gap: '0.8rem' }}>
+    <div className="container" style={{ maxWidth: '450px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '100%', padding: '1rem' }}>
+        {selectedDate && groupedMatches[selectedDate] ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '1rem', color: 'var(--ucl-gold)', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '0.8rem', width: '100%' }}>
+              TODAY'S MATCH
+            </h3>
             {groupedMatches[selectedDate].map(match => {
               const userChoice = getUserChoice(match.id);
               return (
-                <div key={match.id} className="glass-card" onClick={() => setSelectedMatch(match)} style={{ cursor: 'pointer', padding: '0.8rem', position: 'relative' }}>
+                <div 
+                  key={match.id} 
+                  className="glass-card" 
+                  onClick={() => setSelectedMatch(match)} 
+                  style={{ 
+                    cursor: 'pointer', 
+                    padding: '2rem 1.5rem', 
+                    position: 'relative', 
+                    width: '100%',
+                    maxWidth: '400px',
+                    borderRadius: '24px',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
+                  }}
+                >
                   {isDummyMatch(match) && (
-                    <div style={{ position: 'absolute', top: '-5px', right: '10px', background: 'var(--ucl-navy)', color: 'white', fontSize: '0.5rem', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--ucl-electric)', fontWeight: 800, zIndex: 10 }}>DUMMY</div>
+                    <div style={{ position: 'absolute', top: '10px', right: '15px', background: 'var(--ucl-navy)', color: 'white', fontSize: '0.6rem', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--ucl-electric)', fontWeight: 800, zIndex: 10 }}>TEST</div>
                   )}
-                  <div className="match-card" style={{ gap: '0.5rem' }}>
-                    <div className="team-info">
-                      <img src={match.home_logo || ''} width="30" height="30" alt="" style={{ marginBottom: '0.2rem' }} />
-                      <span style={{ fontSize: '0.65rem', fontWeight: 800, textAlign: 'center', lineHeight: 1.1 }}>{match.home_team.split(' ')[0]}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem' }}>
+                      <div style={{ width: '70px', height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src={match.home_logo || ''} width="65" height="65" alt="" />
+                      </div>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 900, textAlign: 'center', color: 'white', letterSpacing: '0.5px' }}>{match.home_team.toUpperCase()}</span>
                     </div>
                     
-                    <div style={{ textAlign: 'center', minWidth: '40px' }}>
+                    <div style={{ textAlign: 'center', minWidth: '60px' }}>
                       {userChoice ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <CheckCircle2 color="var(--ucl-electric)" size={16} />
-                          <span style={{ fontSize: '0.5rem', color: 'var(--ucl-electric)', fontWeight: 800 }}>PICKED</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+                          <CheckCircle2 color="var(--ucl-electric)" size={24} />
+                          <span style={{ fontSize: '0.6rem', color: 'var(--ucl-electric)', fontWeight: 900, letterSpacing: '1px' }}>PICKED</span>
                         </div>
                       ) : (
-                        <div className="vs-badge" style={{ fontSize: '0.5rem', padding: '0.2rem 0.4rem' }}>{match.status === 'LIVE' ? 'LIVE' : 'VS'}</div>
+                        <div className="vs-badge" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', fontWeight: 900 }}>VS</div>
                       )}
                     </div>
 
-                    <div className="team-info">
-                      <img src={match.away_logo || ''} width="30" height="30" alt="" style={{ marginBottom: '0.2rem' }} />
-                      <span style={{ fontSize: '0.65rem', fontWeight: 800, textAlign: 'center', lineHeight: 1.1 }}>{match.away_team.split(' ')[0]}</span>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem' }}>
+                      <div style={{ width: '70px', height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img src={match.away_logo || ''} width="65" height="65" alt="" />
+                      </div>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 900, textAlign: 'center', color: 'white', letterSpacing: '0.5px' }}>{match.away_team.toUpperCase()}</span>
                     </div>
                   </div>
                 </div>
               );
             })}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '3rem', opacity: 0.5 }}>
+            <p style={{ fontSize: '1rem', letterSpacing: '1px' }}>NO MATCHES SCHEDULED</p>
           </div>
         )}
       </div>
