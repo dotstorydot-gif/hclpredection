@@ -96,8 +96,8 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
       </div>
 
       <div className="glass-card" style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', minHeight: '0' }}>
-        <h2 style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1rem', color: 'var(--ucl-gold)', textAlign: 'center' }}>
-          {tab === 'buzzer' ? `Fastest @ ${registration.venue_id}` : 'Global Prediction Ranking'}
+        <h2 style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '1.2rem', color: 'var(--ucl-gold)', textAlign: 'center', fontWeight: 900 }}>
+          {tab === 'buzzer' ? '⚡️ FASTEST CLICK RANKING ⚡️' : '🏆 GLOBAL PREDICTION RANKING 🏆'}
         </h2>
 
         {loading ? (

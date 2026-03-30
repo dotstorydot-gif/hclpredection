@@ -63,72 +63,90 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '400px', height: '85vh', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', cursor: 'pointer', padding: '0.5rem' }}>
-        <ArrowLeft size={14} /> BACK TO LIST
-      </button>
-
-      <div className="glass-card" style={{ padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '0' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.5rem', marginBottom: '0.8rem' }}>
-            <img src={match.home_logo || ''} width="50" alt="" />
-            <span style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--ucl-silver)' }}>VS</span>
-            <img src={match.away_logo || ''} width="50" alt="" />
+    <div className="container" style={{ maxWidth: '400px', height: '85vh', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
+      <div className="glass-card" style={{ padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '0', borderRadius: '24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
+            <img src={match.home_logo || ''} width="60" alt="" />
+            <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--ucl-silver)', opacity: 0.5 }}>VS</span>
+            <img src={match.away_logo || ''} width="60" alt="" />
           </div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.4rem' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem', color: 'white' }}>
             {match.home_team} vs {match.away_team}
           </h2>
-          <div style={{ display: 'inline-block', padding: '0.2rem 1rem', background: 'rgba(255,0,0,0.2)', color: 'red', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800 }}>
+          <div style={{ display: 'inline-block', padding: '0.4rem 1.2rem', background: 'rgba(255,0,0,0.2)', color: 'red', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 900, letterSpacing: '1px' }}>
             LIVE NOW
           </div>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '2rem 0' }}>
           {isBuzzerActive ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
               <button
                 onClick={handleBuzzerHit}
                 disabled={hasHit}
                 className="ucl-button"
                 style={{
-                  width: '180px',
-                  height: '180px',
+                  width: '200px',
+                  height: '200px',
                   borderRadius: '50%',
-                  fontSize: '1.5rem',
+                  fontSize: '1.6rem',
                   background: hasHit ? 'rgba(255,255,255,0.1)' : 'radial-gradient(circle, #ff0000, #b30000)',
-                  boxShadow: hasHit ? 'none' : '0 0 50px rgba(255, 0, 0, 0.5)',
+                  boxShadow: hasHit ? 'none' : '0 0 60px rgba(255, 0, 0, 0.6)',
                   animation: hasHit ? 'none' : 'pulse 1s infinite',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: 'white',
-                  border: '8px solid rgba(255,255,255,0.1)'
+                  border: '10px solid rgba(255,255,255,0.1)',
+                  fontWeight: 900
                 }}
               >
                 {hasHit ? 'RECORDED!' : 'GOAL! HIT!'}
-                {!hasHit && <Trophy size={28} />}
+                {!hasHit && <Trophy size={32} style={{ marginTop: '0.5rem' }} />}
               </button>
-              <p style={{ color: 'var(--ucl-gold)', fontWeight: 800, fontSize: '0.7rem', textAlign: 'center' }}>
-                BE THE FASTEST AT {registration.venue_id.toUpperCase()}!
+              <p style={{ color: 'var(--ucl-gold)', fontWeight: 900, fontSize: '0.8rem', textAlign: 'center', letterSpacing: '1px' }}>
+                BE THE FASTEST AT YOUR VENUE!
               </p>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', opacity: 0.8 }}>
-              <Clock size={40} style={{ color: 'var(--ucl-gold)', marginBottom: '0.8rem' }} />
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.4rem' }}>Waiting for Goal...</h3>
-              <p style={{ fontSize: '0.75rem', opacity: 0.6, maxWidth: '240px' }}>Stay alert! The buzzer activates instantly when a goal is scored.</p>
+            <div style={{ textAlign: 'center', opacity: 0.9 }}>
+              <Clock size={50} style={{ color: 'var(--ucl-gold)', marginBottom: '1rem', animation: 'pulse 2s infinite' }} />
+              <h3 style={{ fontSize: '1.3rem', marginBottom: '0.6rem', fontWeight: 800 }}>Waiting for Goal...</h3>
+              <p style={{ fontSize: '0.85rem', opacity: 0.6, maxWidth: '260px', margin: '0 auto', lineHeight: '1.4' }}>Stay alert! The buzzer activates instantly when a goal is scored.</p>
             </div>
           )}
         </div>
 
-        <div style={{ marginTop: '1rem', padding: '0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.65rem', fontWeight: 800 }}>
-            <span style={{ opacity: 0.6 }}>PREDICTION STATUS</span>
+        <div style={{ marginTop: 'auto', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', fontWeight: 900, letterSpacing: '1px' }}>
+            <span style={{ opacity: 0.5 }}>PREDICTION STATUS</span>
             <span style={{ color: 'var(--ucl-gold)' }}>LOCKED & LIVE</span>
           </div>
         </div>
       </div>
+
+      <button 
+        onClick={onBack} 
+        style={{ 
+          background: 'none', 
+          border: 'none', 
+          color: 'white', 
+          opacity: 0.5, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          gap: '0.5rem', 
+          fontSize: '0.8rem', 
+          cursor: 'pointer', 
+          padding: '1rem',
+          width: '100%',
+          fontWeight: 800
+        }}
+      >
+        <ArrowLeft size={16} /> BACK TO FIXTURES
+      </button>
     </div>
   );
 };

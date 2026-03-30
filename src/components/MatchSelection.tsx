@@ -39,9 +39,23 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
     return predictions.find(p => p.match_id === matchId)?.winner_choice;
   };
 
+  const isPredictionLocked = (match: Match) => {
+    const kickoff = new Date(match.kickoff_time);
+    const now = new Date();
+    const diffInMinutes = (now.getTime() - kickoff.getTime()) / (1000 * 60);
+    // Lock if match started more than 60 minutes ago
+    return diffInMinutes > 60;
+  };
+
   const handlePredict = async () => {
     if (!selectedMatch || !choice) return;
     
+    if (isPredictionLocked(selectedMatch)) {
+      alert('Prediction window closed. (Locked 60 mins after kickoff)');
+      setSelectedMatch(null);
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase
@@ -52,15 +66,19 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
           winner_choice: choice,
         }, { onConflict: 'registration_id,match_id' });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase Error:', error);
+        throw error;
+      }
       
       const matchToLive = selectedMatch;
       setIsConfirming(false);
       setSelectedMatch(null);
       setChoice(null);
+      fetchData(); // Refresh to show the new pick
       onPredictionComplete(matchToLive);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Prediction failed');
+      alert(error instanceof Error ? error.message : 'Prediction failed. Check your connection.');
     } finally {
       setLoading(false);
     }
@@ -225,25 +243,31 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
             </h3>
             {groupedMatches[selectedDate].map(match => {
               const userChoice = getUserChoice(match.id);
+              const locked = isPredictionLocked(match);
+
               return (
                 <div 
                   key={match.id} 
                   className="glass-card" 
-                  onClick={() => setSelectedMatch(match)} 
+                  onClick={() => !locked && setSelectedMatch(match)} 
                   style={{ 
-                    cursor: 'pointer', 
-                    padding: '2rem 1.5rem', 
-                    position: 'relative', 
-                    width: '100%',
-                    maxWidth: '400px',
-                    borderRadius: '24px',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
-                  }}
-                >
-                  {isDummyMatch(match) && (
-                    <div style={{ position: 'absolute', top: '10px', right: '15px', background: 'var(--ucl-navy)', color: 'white', fontSize: '0.6rem', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--ucl-electric)', fontWeight: 800, zIndex: 10 }}>TEST</div>
-                  )}
+                    cursor: locked ? 'default' : 'pointer', 
+                      padding: '2rem 1.5rem', 
+                      position: 'relative', 
+                      width: '100%',
+                      maxWidth: '400px',
+                      borderRadius: '24px',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                      opacity: locked ? 0.7 : 1
+                    }}
+                  >
+                    {isDummyMatch(match) && !locked && (
+                      <div style={{ position: 'absolute', top: '10px', right: '15px', background: 'var(--ucl-navy)', color: 'white', fontSize: '0.6rem', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--ucl-electric)', fontWeight: 800, zIndex: 10 }}>TEST</div>
+                    )}
+                    {locked && (
+                      <div style={{ position: 'absolute', top: '10px', right: '15px', background: 'rgba(0,0,0,0.5)', color: 'var(--ucl-gold)', fontSize: '0.6rem', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--ucl-gold)', fontWeight: 800, zIndex: 10 }}>LOCKED</div>
+                    )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem' }}>
                       <div style={{ width: '70px', height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
