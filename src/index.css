@@ -1,13 +1,20 @@
+@font-face {
+  font-family: 'HeinekenSerif';
+  src: url('/HeinekenSerif.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root {
-  --ucl-deep-blue: #0a0e1a;
-  --ucl-navy: #151b3d;
-  --ucl-electric: #0056b3;
+  --ucl-deep-blue: #004d1e; /* Heineken Dark Green */
+  --ucl-navy: #008232;      /* Heineken Emerald Green */
+  --ucl-electric: #ff2b00;  /* Heineken Red */
   --ucl-gold: #c5a059;
   --ucl-silver: #e5e7eb;
   --ucl-white: #ffffff;
-  --ucl-glass: rgba(255, 255, 255, 0.05);
+  --ucl-glass: rgba(0, 0, 0, 0.6);
   --ucl-glass-border: rgba(255, 255, 255, 0.1);
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family: 'HeinekenSerif', 'Inter', sans-serif;
 }
 
 * {
