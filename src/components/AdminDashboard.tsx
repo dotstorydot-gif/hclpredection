@@ -131,7 +131,9 @@ export const AdminDashboard: React.FC = () => {
                 </>
               )}
               {match.status === 'FINISHED' && (
-                <p style={{ gridColumn: 'span 2', textAlign: 'center', opacity: 0.5, fontSize: '0.8rem' }}>Match Completed</p>
+                <button className="ucl-button" style={{ gridColumn: 'span 2', background: 'none', border: '1px solid rgba(255,255,255,0.2)' }} onClick={() => updateMatch(match.id, { status: 'UPCOMING', home_score: 0, away_score: 0 })}>
+                  RESET MATCH
+                </button>
               )}
             </div>
           </div>
