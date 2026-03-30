@@ -25,7 +25,7 @@
 
 body {
   font-family: var(--font-family);
-  background: linear-gradient(rgba(0, 58, 24, 0.4), rgba(0, 58, 24, 0.4)), url('/background.png') no-repeat top center fixed;
+  background: linear-gradient(rgba(0, 58, 24, 0.4), rgba(0, 58, 24, 0.4)), url('/background.png') no-repeat center center fixed;
   background-size: cover;
   color: var(--ucl-white);
   min-height: 100vh;

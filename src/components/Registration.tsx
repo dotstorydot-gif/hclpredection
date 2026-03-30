@@ -50,11 +50,11 @@ export const Registration: React.FC<Props> = ({ onComplete }) => {
   };
 
   return (
-    <div className="container" style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(10vh - 20px)' }}>
-      <div className="glass-card" style={{ padding: '2rem 1.5rem', width: 'calc(100% - 2rem)', maxWidth: '400px', borderRadius: '24px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <h1 className="ucl-title" style={{ fontSize: '1.4rem', marginBottom: '0.2rem' }}>Welcome to the Game</h1>
-          <p style={{ opacity: 0.7, fontSize: '0.8rem' }}>Enter your details to join the live prediction</p>
+    <div className="container" style={{ width: '100%', maxWidth: '400px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingBottom: '2rem' }}>
+      <div className="glass-card" style={{ padding: '1.5rem 1.2rem', width: 'calc(100% - 2rem)', maxWidth: '400px', borderRadius: '24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '0.8rem' }}>
+          <h1 className="ucl-title" style={{ fontSize: '1.2rem', marginBottom: '0.1rem' }}>Welcome to the Game</h1>
+          <p style={{ opacity: 0.7, fontSize: '0.7rem' }}>Enter details to predict & win</p>
         </div>
 
         <form onSubmit={handleSubmit} className="grid" style={{ gap: '0.8rem' }}>
@@ -100,7 +100,7 @@ export const Registration: React.FC<Props> = ({ onComplete }) => {
             </select>
           </div>
 
-          <button type="submit" className="ucl-button" disabled={loading} style={{ marginTop: '0.5rem', width: '100%', padding: '0.7rem' }}>
+          <button type="submit" className="ucl-button" disabled={loading} style={{ marginTop: '0.3rem', width: '100%', padding: '0.6rem', fontSize: '0.8rem' }}>
             {loading ? 'REGISTERING...' : 'CONTINUE TO MATCHES'}
           </button>
         </form>
