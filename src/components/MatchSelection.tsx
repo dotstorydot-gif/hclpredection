@@ -111,11 +111,12 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
 
   if (selectedMatch && !isConfirming) {
     return (
-      <div className="container" style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh', gap: '1rem' }}>
+      <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh', gap: '1rem' }}>
         <div 
           className="glass-card" 
           style={{ 
-            width: '100%', 
+            width: 'calc(100% - 2rem)', 
+            maxWidth: '400px',
             padding: '2rem 1.5rem', 
             borderRadius: '24px',
             boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
@@ -224,7 +225,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
 
   if (selectedMatch && isConfirming) {
     return (
-      <div className="container" style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh' }}>
+      <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh' }}>
         <div className="glass-card" style={{ textAlign: 'center' }}>
           <h2 className="ucl-title" style={{ fontSize: '1.5rem' }}>Confirm Choice</h2>
           <div style={{ margin: '1.5rem 0' }}>
@@ -241,7 +242,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
   }
 
   return (
-    <div className="container" style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh' }}>
+    <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh' }}>
       <div style={{ width: '100%', padding: '1rem' }}>
         {selectedDate && groupedMatches[selectedDate] ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>
@@ -259,19 +260,19 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
                   onClick={() => !locked && setSelectedMatch(match)} 
                   style={{ 
                     cursor: locked ? 'default' : 'pointer', 
-                      padding: '2rem 1.5rem', 
-                      position: 'relative', 
-                      width: '100%',
-                      maxWidth: '400px',
-                      borderRadius: '24px',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-                      opacity: locked ? 0.7 : 1
-                    }}
-                  >
-                    {isDummyMatch(match) && !locked && (
-                      <div style={{ position: 'absolute', top: '10px', right: '15px', background: 'var(--ucl-navy)', color: 'white', fontSize: '0.6rem', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--ucl-electric)', fontWeight: 800, zIndex: 10 }}>TEST</div>
-                    )}
+                    padding: '2rem 1.5rem', 
+                    position: 'relative', 
+                    width: 'calc(100% - 2rem)',
+                    maxWidth: '400px',
+                    borderRadius: '24px',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                    opacity: locked ? 0.7 : 1
+                  }}
+                >
+                  {isDummyMatch(match) && !locked && (
+                    <div style={{ position: 'absolute', top: '10px', right: '15px', background: 'var(--ucl-navy)', color: 'white', fontSize: '0.6rem', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--ucl-electric)', fontWeight: 800, zIndex: 10 }}>TEST</div>
+                  )}
                     {locked && (
                       <div style={{ position: 'absolute', top: '10px', right: '15px', background: 'rgba(0,0,0,0.5)', color: 'var(--ucl-gold)', fontSize: '0.6rem', padding: '4px 10px', borderRadius: '6px', border: '1px solid var(--ucl-gold)', fontWeight: 800, zIndex: 10 }}>LOCKED</div>
                     )}
