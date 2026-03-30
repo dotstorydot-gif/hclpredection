@@ -35,8 +35,19 @@ function App() {
   }
 
   return (
-    <main style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <nav className="glass-card" style={{ borderRadius: '0', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1.5rem', flexShrink: 0 }}>
+    <main style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      <nav style={{ 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 50, 
+        background: '#004d1e', // Heineken Dark Green
+        borderBottom: '1px solid rgba(255,255,255,0.1)', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        padding: '1rem 1.5rem', 
+        flexShrink: 0 
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
           <span style={{ fontWeight: 800, letterSpacing: '1px', fontSize: '0.9rem', color: 'white', textTransform: 'uppercase' }}>
             PREDICT AND WIN
