@@ -37,8 +37,8 @@ function App() {
       <nav className="glass-card" style={{ borderRadius: '0', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.8rem 1.5rem', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
           <img src="https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg" alt="UCL Logo" width="30" height="30" style={{ filter: 'brightness(0) invert(1)' }} />
-          <span style={{ fontWeight: 800, letterSpacing: '1px', fontSize: '1rem', color: 'white' }}>
-            UCL LIVE
+          <span style={{ fontWeight: 800, letterSpacing: '1px', fontSize: '0.9rem', color: 'white', textTransform: 'uppercase' }}>
+            PREDICT AND WIN
           </span>
         </div>
         
