@@ -14,7 +14,9 @@ function App() {
     const saved = localStorage.getItem('ucl_registration');
     return saved ? JSON.parse(saved) : null;
   });
-  const [isAdmin] = useState(() => window.location.hash === '#admin');
+  const [isAdmin] = useState(() => 
+    window.location.hash === '#admin' || window.location.pathname === '/admin'
+  );
   const [view, setView] = useState<'selection' | 'live' | 'leaderboard'>('selection');
   const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
 
