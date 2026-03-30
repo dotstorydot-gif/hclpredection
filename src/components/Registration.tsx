@@ -50,7 +50,7 @@ export const Registration: React.FC<Props> = ({ onComplete }) => {
   };
 
   return (
-    <div className="container" style={{ maxWidth: '400px' }}>
+    <div className="container" style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh' }}>
       <div className="glass-card" style={{ padding: '1rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
           <img src="https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg" alt="UCL" width="40" style={{ filter: 'brightness(0) invert(1)', marginBottom: '0.5rem' }} />

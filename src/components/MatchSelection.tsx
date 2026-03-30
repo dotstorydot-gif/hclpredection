@@ -111,7 +111,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
 
   if (selectedMatch && !isConfirming) {
     return (
-      <div className="container" style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div className="container" style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh' }}>
         <div 
           className="glass-card" 
           style={{ 
@@ -217,7 +217,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
 
   if (selectedMatch && isConfirming) {
     return (
-      <div className="container" style={{ maxWidth: '400px' }}>
+      <div className="container" style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh' }}>
         <div className="glass-card" style={{ textAlign: 'center' }}>
           <h2 className="ucl-title" style={{ fontSize: '1.5rem' }}>Confirm Choice</h2>
           <div style={{ margin: '1.5rem 0' }}>
@@ -234,7 +234,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
   }
 
   return (
-    <div className="container" style={{ maxWidth: '450px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="container" style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh' }}>
       <div style={{ width: '100%', padding: '1rem' }}>
         {selectedDate && groupedMatches[selectedDate] ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>

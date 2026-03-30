@@ -63,7 +63,7 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '400px', height: '85vh', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
+    <div className="container" style={{ maxWidth: '500px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh', gap: '1rem' }}>
       <div className="glass-card" style={{ padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '0', borderRadius: '24px' }}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
