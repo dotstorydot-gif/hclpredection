@@ -78,10 +78,6 @@ function App() {
           <LiveMatch registration={registration} />
         )
       )}
-
-      <footer style={{ marginTop: '4rem', padding: '2rem', textAlign: 'center', borderTop: '1px solid var(--ucl-glass-border)', color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.8rem' }}>
-        &copy; 2024 UCL Live Experience - Official Venue Game
-      </footer>
     </main>
   );
 }

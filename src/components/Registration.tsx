@@ -50,46 +50,48 @@ export const Registration: React.FC<Props> = ({ onComplete }) => {
   };
 
   return (
-    <div className="container" style={{ maxWidth: '450px', marginTop: '5vh' }}>
-      <div className="glass-card">
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <img src="https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg" alt="UCL" width="60" style={{ filter: 'brightness(0) invert(1)', marginBottom: '1rem' }} />
-          <h1 className="ucl-title" style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Welcome to the Game</h1>
-          <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>Enter your details to join the live prediction</p>
+    <div className="container" style={{ maxWidth: '400px', marginTop: '1vh' }}>
+      <div className="glass-card" style={{ padding: '1rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+          <img src="https://upload.wikimedia.org/wikipedia/en/b/bf/UEFA_Champions_League_logo_2.svg" alt="UCL" width="40" style={{ filter: 'brightness(0) invert(1)', marginBottom: '0.5rem' }} />
+          <h1 className="ucl-title" style={{ fontSize: '1.4rem', marginBottom: '0.2rem' }}>Welcome to the Game</h1>
+          <p style={{ opacity: 0.7, fontSize: '0.8rem' }}>Enter your details to join the live prediction</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid">
+        <form onSubmit={handleSubmit} className="grid" style={{ gap: '0.8rem' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>FULL NAME</label>
+            <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: 600, fontSize: '0.75rem' }}>FULL NAME</label>
             <input
               type="text"
               className="ucl-input"
               placeholder="John Doe"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              style={{ padding: '0.6rem' }}
               required
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>PHONE NUMBER</label>
+            <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: 600, fontSize: '0.75rem' }}>PHONE NUMBER</label>
             <input
               type="tel"
               className="ucl-input"
               placeholder="+1 234 567 890"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              style={{ padding: '0.6rem' }}
               required
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>SELECT YOUR VENUE</label>
+            <label style={{ display: 'block', marginBottom: '0.3rem', fontWeight: 600, fontSize: '0.75rem' }}>SELECT YOUR VENUE</label>
             <select
               className="ucl-input"
               value={selectedVenue}
               onChange={(e) => setSelectedVenue(e.target.value)}
-              style={{ appearance: 'none', background: 'rgba(255,255,255,0.05)' }}
+              style={{ appearance: 'none', background: 'rgba(255,255,255,0.05)', padding: '0.6rem' }}
               required
             >
               <option value="" disabled style={{ background: '#111' }}>Choose a location...</option>
@@ -99,7 +101,7 @@ export const Registration: React.FC<Props> = ({ onComplete }) => {
             </select>
           </div>
 
-          <button type="submit" className="ucl-button" disabled={loading} style={{ marginTop: '1.5rem', width: '100%' }}>
+          <button type="submit" className="ucl-button" disabled={loading} style={{ marginTop: '0.5rem', width: '100%', padding: '0.7rem' }}>
             {loading ? 'REGISTERING...' : 'CONTINUE TO MATCHES'}
           </button>
         </form>
