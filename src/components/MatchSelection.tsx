@@ -111,7 +111,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
 
   if (selectedMatch && !isConfirming) {
     return (
-      <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh', gap: '1rem' }}>
+      <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(10vh - 20px)', gap: '1rem' }}>
         <div 
           className="glass-card" 
           style={{ 
@@ -221,7 +221,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
 
   if (selectedMatch && isConfirming) {
     return (
-      <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh', gap: '1rem' }}>
+      <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(10vh - 20px)', gap: '1rem' }}>
         <div 
           className="glass-card" 
           style={{ 
@@ -285,11 +285,11 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
   }
 
   return (
-    <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '10vh' }}>
+    <div className="container" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(10vh - 20px)' }}>
       <div style={{ width: '100%', padding: '1rem' }}>
         {selectedDate && groupedMatches[selectedDate] ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '1rem', color: 'var(--ucl-gold)', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '0.8rem', width: '100%' }}>
+            <h3 style={{ fontSize: '1rem', color: 'white', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '0.8rem', width: '100%' }}>
               TODAY'S MATCH
             </h3>
             {groupedMatches[selectedDate].map(match => {
