@@ -115,6 +115,26 @@ export const AdminDashboard: React.FC = () => {
     fetchMatches();
   };
 
+  const wipeAllData = async () => {
+    if (!confirm('☢️ DANGER: THIS WILL PERMANENTLY WIPE ALL REGISTRATIONS, PREDICTIONS, AND BUZZER HITS. ARE YOU SURE?')) return;
+    
+    setLoading(true);
+    try {
+      // Deleting registrations cascades to predictions and buzzer_hits
+      const { error } = await supabase.from('registrations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (error) throw error;
+      
+      alert('Data wiped successfully!');
+      fetchMatches();
+      fetchBuzzerHits();
+      calculateRanks();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Wipe failed. Ensure you ran the SQL policies first.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) return <div className="container" style={{ textAlign: 'center', marginTop: '5rem' }}>Synchronizing Admin Data...</div>;
 
   return (
@@ -216,6 +236,10 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+          <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid rgba(255,0,0,0.2)', textAlign: 'center' }}>
+            <p style={{ color: 'red', fontSize: '0.7rem', marginBottom: '0.5rem', fontWeight: 800 }}>DANGER ZONE</p>
+            <button className="ucl-button" style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid red', color: 'red' }} onClick={wipeAllData}>WIPE EVERYTHING</button>
           </div>
         </div>
       )}
