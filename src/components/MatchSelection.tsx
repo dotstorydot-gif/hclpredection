@@ -93,17 +93,78 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
 
   if (selectedMatch && !isConfirming) {
     return (
-      <div className="container" style={{ maxWidth: '400px' }}>
-        <button onClick={() => setSelectedMatch(null)} className="ucl-button" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '1.5rem', width: 'auto' }}>
-          &larr; BACK
-        </button>
-        <div className="glass-card">
-          <h2 className="ucl-title" style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Who will win?</h2>
-          <div className="grid" style={{ gap: '0.8rem' }}>
-            <button className={`ucl-input ${choice === 'HOME' ? 'selected' : ''}`} onClick={() => setChoice('HOME')}>{selectedMatch.home_team}</button>
-            <button className={`ucl-input ${choice === 'DRAW' ? 'selected' : ''}`} onClick={() => setChoice('DRAW')}>THE DRAW</button>
-            <button className={`ucl-input ${choice === 'AWAY' ? 'selected' : ''}`} onClick={() => setChoice('AWAY')}>{selectedMatch.away_team}</button>
-            <button className="ucl-button" disabled={!choice} onClick={() => setIsConfirming(true)} style={{ marginTop: '1rem', background: choice ? 'var(--ucl-electric)' : 'rgba(255,255,255,0.1)' }}>CONTINUE</button>
+      <div className="container" style={{ maxWidth: '450px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div 
+          className="glass-card" 
+          style={{ 
+            width: '100%', 
+            padding: '2.5rem 1.5rem', 
+            borderRadius: '24px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+            border: '1px solid rgba(255,255,255,0.15)'
+          }}
+        >
+          <h2 className="ucl-title" style={{ fontSize: '1.8rem', marginBottom: '2rem', textAlign: 'center' }}>Who will win?</h2>
+          
+          <div className="grid" style={{ gap: '1rem' }}>
+            <button 
+              className={`ucl-input ${choice === 'HOME' ? 'selected' : ''}`} 
+              onClick={() => setChoice('HOME')}
+              style={{ padding: '0.8rem', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}
+            >
+              <img src={selectedMatch.home_logo || ''} width="35" height="35" alt="" />
+              <span style={{ fontSize: '1rem', fontWeight: 800 }}>{selectedMatch.home_team.toUpperCase()}</span>
+            </button>
+
+            <button 
+              className={`ucl-input ${choice === 'DRAW' ? 'selected' : ''}`} 
+              onClick={() => setChoice('DRAW')}
+              style={{ fontSize: '1rem', fontWeight: 800, padding: '1rem' }}
+            >
+              THE DRAW
+            </button>
+
+            <button 
+              className={`ucl-input ${choice === 'AWAY' ? 'selected' : ''}`} 
+              onClick={() => setChoice('AWAY')}
+              style={{ padding: '0.8rem', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}
+            >
+              <img src={selectedMatch.away_logo || ''} width="35" height="35" alt="" />
+              <span style={{ fontSize: '1rem', fontWeight: 800 }}>{selectedMatch.away_team.toUpperCase()}</span>
+            </button>
+            
+            <button 
+              className="ucl-button" 
+              disabled={!choice} 
+              onClick={() => setIsConfirming(true)}
+              style={{ 
+                marginTop: '1.5rem', 
+                background: choice ? 'var(--ucl-electric)' : 'rgba(255,255,255,0.1)',
+                color: choice ? 'black' : 'white',
+                padding: '1.2rem',
+                fontSize: '1rem',
+                fontWeight: 900,
+                letterSpacing: '1px'
+              }}
+            >
+              CONTINUE
+            </button>
+
+            <button 
+              onClick={() => setSelectedMatch(null)} 
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                color: 'white', 
+                opacity: 0.5, 
+                fontSize: '0.9rem', 
+                marginTop: '1rem',
+                cursor: 'pointer',
+                fontWeight: 800
+              }}
+            >
+              &larr; BACK
+            </button>
           </div>
         </div>
       </div>
