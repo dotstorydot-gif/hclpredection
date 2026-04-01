@@ -117,20 +117,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
       const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long' }).toUpperCase();
       setSelectedDate(dates.includes(today) ? today : dates[0]);
     }
-
-    // Auto-jump to the LIVE match prediction or directly to LIVE view if already predicted
-    if (matches.length > 0 && !selectedMatch) {
-      const live = matches.find(m => m.status === 'LIVE');
-      if (live) {
-        const hasPred = predictions.some(p => p.match_id === live.id);
-        if (!hasPred) {
-          setSelectedMatch(live);
-        } else if (onAlreadyPredicted) {
-          onAlreadyPredicted(live);
-        }
-      }
-    }
-  }, [dates, selectedDate, matches, predictions, selectedMatch, onAlreadyPredicted]);
+  }, [dates, selectedDate]);
 
   const isDummyMatch = (match: Match) => {
     const kickoff = new Date(match.kickoff_time);
