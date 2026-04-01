@@ -36,36 +36,24 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
           .select('*, registrations(name)')
           .eq('venue_id', registration.venue_id)
           .order('hit_time', { ascending: true })
-          .limit(10);
+          .limit(20);
         
         const winners = (data || []).map(d => ({
-          name: (d.registrations as unknown as { name: string })?.name || 'Anonymous',
+          name: (d.registrations as any)?.name || 'Anonymous',
           hit_timestamp: d.hit_time || '',
           venue_id: d.venue_id
         }));
         setBuzzerWinners(winners);
       } else {
-        const { data: regs } = await supabase.from('registrations').select('name, id');
-        const { data: matches } = await supabase.from('matches').select('*').eq('status', 'FINISHED');
-        const { data: preds } = await supabase.from('predictions').select('*');
-
-        const ranks = (regs || []).map(r => {
-          let points = 0;
-          const userPreds = (preds || []).filter(p => p.registration_id === r.id);
-          
-          userPreds.forEach(p => {
-            const match = (matches || []).find(m => m.id === p.match_id);
-            if (match) {
-              const actualWinner = match.home_score > match.away_score ? 'HOME' : 
-                                 match.home_score < match.away_score ? 'AWAY' : 'DRAW';
-              if (p.winner_choice === actualWinner) points += 10;
-            }
-          });
-
-          return { name: r.name, points };
-        }).sort((a,b) => b.points - a.points).slice(0, 10);
-
-        setPredictionRanks(ranks);
+        const { data, error } = await supabase
+          .from('registrations')
+          .select('name, points')
+          .order('points', { ascending: false })
+          .limit(20);
+        
+        if (!error && data) {
+          setPredictionRanks(data as PredictionRank[]);
+        }
       }
     } finally {
       setLoading(false);

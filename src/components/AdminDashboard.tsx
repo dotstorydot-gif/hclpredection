@@ -50,26 +50,53 @@ export const AdminDashboard: React.FC = () => {
   }, []);
 
   const calculateRanks = useCallback(async () => {
-    const { data: regs } = await supabase.from('registrations').select('name, id');
-    const { data: matchesData } = await supabase.from('matches').select('*').eq('status', 'FINISHED');
-    const { data: preds } = await supabase.from('predictions').select('*');
-
-    const calculated = (regs || []).map(r => {
-      let points = 0;
-      const userPreds = (preds || []).filter(p => p.registration_id === r.id);
-      userPreds.forEach(p => {
-        const match = (matchesData || []).find(m => m.id === p.match_id);
-        if (match) {
-          const winner = match.home_score > match.away_score ? 'HOME' : 
-                         match.home_score < match.away_score ? 'AWAY' : 'DRAW';
-          if (p.winner_choice === winner) points += 10;
-        }
-      });
-      return { name: r.name, points };
-    }).sort((a,b) => b.points - a.points).slice(0, 20);
-
-    setRanks(calculated);
+    const { data } = await supabase
+      .from('registrations')
+      .select('name, points')
+      .order('points', { ascending: false })
+      .limit(50);
+    setRanks((data || []) as Rank[]);
   }, []);
+
+  const finishMatch = async (matchId: string) => {
+    const match = matches.find(m => m.id === matchId);
+    if (!match || (match as any).processed) return;
+
+    if (!confirm(`Finish ${match.home_team} vs ${match.away_team} and AWARD 10 POINTS to correct predictors?`)) return;
+
+    setLoading(true);
+    try {
+      const winner = match.home_score > match.away_score ? 'HOME' : 
+                     match.home_score < match.away_score ? 'AWAY' : 'DRAW';
+
+      const { data: correctPreds } = await supabase
+        .from('predictions')
+        .select('registration_id')
+        .eq('match_id', matchId)
+        .eq('winner_choice', winner);
+
+      if (correctPreds && correctPreds.length > 0) {
+        for (const p of correctPreds) {
+          // Increment points for each winner
+          await supabase.rpc('increment_points', { user_id: p.registration_id, amount: 10 });
+        }
+      }
+
+      await supabase.from('matches').update({ 
+        status: 'FINISHED', 
+        processed: true,
+        buzzer_active: false 
+      }).eq('id', matchId);
+
+      alert(`Match Processed! ${correctPreds?.length || 0} users awarded 10 points.`);
+      fetchMatches();
+      calculateRanks();
+    } catch (err) {
+      alert('Award points failed. Ensure increment_points SQL is run.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -286,12 +313,12 @@ export const AdminDashboard: React.FC = () => {
                           </button>
                         )}
                         {match.status === 'LIVE' && (
-                          <button className="ucl-button" style={{ padding: '0.6rem 1rem', fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)' }} onClick={() => updateMatch(match.id, { status: 'FINISHED', buzzer_active: false })}>
+                          <button className="ucl-button" style={{ padding: '0.6rem 1rem', fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)' }} onClick={() => finishMatch(match.id)}>
                             <Square size={12} /> FINISH
                           </button>
                         )}
                         {match.status === 'FINISHED' && (
-                          <button className="ucl-button" style={{ padding: '0.6rem 1rem', fontSize: '0.65rem', opacity: 0.4 }} onClick={() => updateMatch(match.id, { status: 'UPCOMING', home_score: 0, away_score: 0 })}>
+                          <button className="ucl-button" style={{ padding: '0.6rem 1rem', fontSize: '0.65rem', opacity: 0.4 }} onClick={() => updateMatch(match.id, { status: 'UPCOMING', home_score: 0, away_score: 0, processed: false })}>
                             <RotateCw size={12} /> RESET
                           </button>
                         )}
@@ -342,7 +369,7 @@ export const AdminDashboard: React.FC = () => {
                           <button className="ucl-button" style={{ background: 'var(--ucl-gold)', color: 'black' }} onClick={() => triggerBuzzer(match.id)}>
                             <Zap size={14} /> MANUAL BUZZER
                           </button>
-                          <button className="ucl-button" style={{ background: 'rgba(255,255,255,0.1)' }} onClick={() => updateMatch(match.id, { status: 'FINISHED' })}>
+                          <button className="ucl-button" style={{ background: 'rgba(255,255,255,0.1)' }} onClick={() => finishMatch(match.id)}>
                             <CheckCircle size={14} /> FINISH MATCH
                           </button>
                         </>

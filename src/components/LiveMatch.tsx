@@ -48,12 +48,18 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
   useEffect(() => {
     if (!initialMatch) return;
 
+    const fetchLatestMatch = async () => {
+      const { data } = await supabase.from('matches').select('*').eq('id', initialMatch.id).single();
+      if (data) setLocalMatch(data);
+    };
+
     // 1. Listen for Broadcast (Ultra-fast, ephemeral)
     const channel = supabase.channel(`match-${initialMatch.id}`)
       .on('broadcast', { event: 'activate-buzzer' }, () => {
         setIsBuzzerActive(true);
         setHasHit(false);
         setStandings([]);
+        fetchLatestMatch(); // Sync state on broadcast
       })
       // 2. Listen for Postgres Changes on Match (Scores, Status, Buzzer)
       .on(
@@ -74,8 +80,12 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
       )
       .subscribe();
 
+    // 4. Polling Fallback: re-fetch every 5s for mobile devices that might lose WS
+    const pollInterval = setInterval(fetchLatestMatch, 5000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
   }, [initialMatch?.id, fetchStandings]);
 

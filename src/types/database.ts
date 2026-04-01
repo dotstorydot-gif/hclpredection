@@ -34,6 +34,7 @@ export type Database = {
           name: string
           phone: string
           venue_id: string
+          points: number
           created_at: string
         }
         Insert: {
@@ -42,6 +43,7 @@ export type Database = {
           name: string
           phone: string
           venue_id: string
+          points?: number
           created_at?: string
         }
         Update: {
@@ -50,6 +52,7 @@ export type Database = {
           name?: string
           phone?: string
           venue_id?: string
+          points?: number
           created_at?: string
         }
         Relationships: [
@@ -73,6 +76,7 @@ export type Database = {
           home_score: number
           away_score: number
           buzzer_active: boolean
+          processed: boolean
           created_at: string
         }
         Insert: {
@@ -86,6 +90,7 @@ export type Database = {
           home_score?: number
           away_score?: number
           buzzer_active?: boolean
+          processed?: boolean
           created_at?: string
         }
         Update: {
@@ -99,6 +104,7 @@ export type Database = {
           home_score?: number
           away_score?: number
           buzzer_active?: boolean
+          processed?: boolean
           created_at?: string
         }
         Relationships: []
@@ -194,7 +200,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_points: {
+        Args: {
+          user_id: string
+          amount: number
+        }
+        Returns: void
+      }
     }
     Enums: {
       [_ in never]: never
