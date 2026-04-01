@@ -103,33 +103,47 @@ export const AdminDashboard: React.FC = () => {
 
   const updateMatch = async (matchId: string, updates: Partial<Match>) => {
     const { error } = await supabase.from('matches').update(updates).eq('id', matchId);
-    if (!error) fetchMatches();
+    if (!error) {
+      fetchMatches();
+    } else {
+      alert(`Match Update Error: ${error.message}`);
+    }
   };
 
   const triggerBuzzer = async (matchId: string) => {
-    // Clear previous hits for a fresh buzzer window
-    await supabase.from('buzzer_hits').delete().eq('match_id', matchId);
+    // 1. Clear previous hits for a fresh buzzer window
+    const { error: delError } = await supabase.from('buzzer_hits').delete().eq('match_id', matchId);
+    if (delError) {
+      alert(`Buzzer Clear Error: ${delError.message}`);
+      return;
+    }
     
-    // Send broadcast for instant client activation (fastest)
+    // 2. Update DB (source of truth for late joiners)
+    const { error: updError } = await supabase.from('matches').update({ buzzer_active: true }).eq('id', matchId);
+    if (updError) {
+      alert(`Buzzer Activation Error: ${updError.message}`);
+      return;
+    }
+
+    // 3. Send Broadcast for ultra-fast instant activation
     const channel = supabase.channel(`match-${matchId}`);
-    await channel.subscribe(async (status) => {
+    channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
-        await channel.send({
+        channel.send({
           type: 'broadcast',
           event: 'activate-buzzer',
           payload: { matchId }
         });
       }
     });
-
-    // Update DB (source of truth for late joiners)
-    await supabase.from('matches').update({ buzzer_active: true }).eq('id', matchId);
     
+    fetchMatches();
+
+    // Auto-reset after 2 minutes
     setTimeout(async () => {
       await supabase.from('matches').update({ buzzer_active: false }).eq('id', matchId);
       fetchMatches();
     }, 120000);
-    fetchMatches();
   };
 
   const recordGoal = async (matchId: string, side: 'HOME' | 'AWAY') => {
@@ -143,6 +157,8 @@ export const AdminDashboard: React.FC = () => {
     const { error } = await supabase.from('matches').update(updates).eq('id', matchId);
     if (!error) {
       await triggerBuzzer(matchId);
+    } else {
+      alert(`Goal Recording Error: ${error.message}`);
     }
   };
 

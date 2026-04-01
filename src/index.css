@@ -256,3 +256,56 @@ body {
   100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 43, 0, 0); }
 }
 
+/* Live Match Mini-Standings Styles */
+.standings-container {
+  width: 100%;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.standings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.standings-row.winner {
+  background: rgba(197, 160, 89, 0.1);
+  border: 1px solid var(--ucl-gold);
+  box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
+  transform: scale(1.02);
+}
+
+.standings-row.user {
+  border-color: var(--ucl-electric);
+  background: rgba(255, 43, 0, 0.05);
+}
+
+.rank-badge {
+  font-weight: 900;
+  font-size: 0.8rem;
+  width: 24px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.rank-badge.top {
+  color: var(--ucl-gold);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes winner-glow {
+  0% { box-shadow: 0 0 5px var(--ucl-gold); }
+  50% { box-shadow: 0 0 20px var(--ucl-gold); }
+  100% { box-shadow: 0 0 5px var(--ucl-gold); }
+}
+
+
