@@ -108,6 +108,11 @@ function App() {
                 setCurrentMatch(match);
                 setView('live');
               }} 
+              // Auto-jump to live if already predicted
+              onAlreadyPredicted={(match) => {
+                setCurrentMatch(match);
+                setView('live');
+              }}
             />
           ) : view === 'live' ? (
             <LiveMatch 

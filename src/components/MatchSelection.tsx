@@ -10,9 +10,10 @@ type Prediction = Database['public']['Tables']['predictions']['Row'];
 interface Props {
   registration: Registration;
   onPredictionComplete: (match: Match) => void;
+  onAlreadyPredicted?: (match: Match) => void;
 }
 
-export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComplete }) => {
+export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComplete, onAlreadyPredicted }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,17 +118,19 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
       setSelectedDate(dates.includes(today) ? today : dates[0]);
     }
 
-    // Auto-jump to the LIVE match prediction if not already predicted
+    // Auto-jump to the LIVE match prediction or directly to LIVE view if already predicted
     if (matches.length > 0 && !selectedMatch) {
       const live = matches.find(m => m.status === 'LIVE');
       if (live) {
         const hasPred = predictions.some(p => p.match_id === live.id);
         if (!hasPred) {
           setSelectedMatch(live);
+        } else if (onAlreadyPredicted) {
+          onAlreadyPredicted(live);
         }
       }
     }
-  }, [dates, selectedDate, matches, predictions, selectedMatch]);
+  }, [dates, selectedDate, matches, predictions, selectedMatch, onAlreadyPredicted]);
 
   const isDummyMatch = (match: Match) => {
     const kickoff = new Date(match.kickoff_time);
