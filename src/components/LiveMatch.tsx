@@ -37,6 +37,15 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
     setStandings(data || []);
   }, [match, registration.venue_id]);
 
+  // Sync local buzzer state with match prop on mount/change
+  useEffect(() => {
+    if (match?.buzzer_active) {
+      setIsBuzzerActive(true);
+    } else {
+      setIsBuzzerActive(false);
+    }
+  }, [match?.id, match?.buzzer_active]);
+
   useEffect(() => {
     if (!match) return;
 
