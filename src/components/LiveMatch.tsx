@@ -44,7 +44,9 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
     } else {
       setIsBuzzerActive(false);
     }
-  }, [match?.id, match?.buzzer_active]);
+    // Also reset hit status if the score changes (new round)
+    setHasHit(false);
+  }, [match?.id, match?.buzzer_active, match?.home_score, match?.away_score]);
 
   useEffect(() => {
     if (!match) return;
@@ -142,6 +144,19 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
           <h2 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem', color: 'white' }}>
             {match.home_team} vs {match.away_team}
           </h2>
+          
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2.5rem', margin: '2rem 0', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ fontSize: '3.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{match.home_score || 0}</span>
+              <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.4, marginTop: '0.5rem', letterSpacing: '1px' }}>HOME</span>
+            </div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, opacity: 0.2, color: 'var(--ucl-gold)' }}>:</div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <span style={{ fontSize: '3.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{match.away_score || 0}</span>
+              <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.4, marginTop: '0.5rem', letterSpacing: '1px' }}>AWAY</span>
+            </div>
+          </div>
+
           <div style={{ display: 'inline-block', padding: '0.4rem 1.2rem', background: 'rgba(255,0,0,0.2)', color: 'red', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 900, letterSpacing: '1px' }}>
             LIVE NOW
           </div>
