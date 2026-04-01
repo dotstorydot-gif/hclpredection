@@ -10,10 +10,9 @@ type Prediction = Database['public']['Tables']['predictions']['Row'];
 interface Props {
   registration: Registration;
   onPredictionComplete: (match: Match) => void;
-  onAlreadyPredicted?: (match: Match) => void;
 }
 
-export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComplete, onAlreadyPredicted }) => {
+export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComplete }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
