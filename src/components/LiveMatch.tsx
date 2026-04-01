@@ -157,13 +157,23 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
             </div>
           </div>
 
-          <div style={{ display: 'inline-block', padding: '0.4rem 1.2rem', background: 'rgba(255,0,0,0.2)', color: 'red', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 900, letterSpacing: '1px' }}>
-            LIVE NOW
+          <div style={{ 
+            display: 'inline-block', 
+            padding: '0.4rem 1.2rem', 
+            background: match.status === 'LIVE' ? 'rgba(255,0,0,0.2)' : 'rgba(197, 160, 89, 0.15)', 
+            color: match.status === 'LIVE' ? 'red' : 'var(--ucl-gold)', 
+            borderRadius: '20px', 
+            fontSize: '0.7rem', 
+            fontWeight: 900, 
+            letterSpacing: '1px',
+            border: `1px solid ${match.status === 'LIVE' ? 'rgba(255,0,0,0.2)' : 'rgba(197, 160, 89, 0.3)'}`
+          }}>
+            {match.status === 'LIVE' ? 'LIVE NOW' : match.status === 'FINISHED' ? 'MATCH FINISHED' : 'UPCOMING'}
           </div>
         </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '2rem 0' }}>
-          {isBuzzerActive ? (
+          {isBuzzerActive && match.status === 'LIVE' ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
               {!hasHit ? (
                 <>
@@ -197,7 +207,7 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
               ) : (
                 <div className="standings-container">
                   <h3 style={{ fontSize: '0.9rem', fontWeight: 900, marginBottom: '1.5rem', textAlign: 'center', letterSpacing: '2px', color: 'var(--ucl-gold)' }}>
-                    ⚡ VENUE STANDINGS ⚡
+                    {match.status === 'LIVE' ? '⚡ VENUE STANDINGS ⚡' : '🏆 FINAL STANDINGS 🏆'}
                   </h3>
                   <div style={{ width: '100%' }}>
                     {standings.length > 0 ? (
