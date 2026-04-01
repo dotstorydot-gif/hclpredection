@@ -89,7 +89,7 @@ export const AdminDashboard: React.FC = () => {
       .channel('admin-buzzer')
       .on(
         'postgres_changes' as any, 
-        { event: 'INSERT', table: 'buzzer_hits', schema: 'public' }, 
+        { event: '*', table: 'buzzer_hits', schema: 'public' }, 
         () => {
           fetchBuzzerHits();
         }
