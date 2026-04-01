@@ -128,7 +128,7 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                       <Trophy size={12} color="var(--ucl-gold)" />
-                      <span style={{ fontWeight: 900, color: 'var(--ucl-gold)', fontSize: '0.9rem' }}>{r.points}</span>
+                      <span style={{ fontWeight: 900, color: 'var(--ucl-gold)', fontSize: '0.9rem' }}>{r.points || 0}</span>
                     </div>
                   </div>
                 ))

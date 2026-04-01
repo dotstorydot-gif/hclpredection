@@ -303,6 +303,11 @@ export const AdminDashboard: React.FC = () => {
                           {match.status === 'LIVE' && <div className="live-dot" style={{ width: '6px', height: '6px' }} />}
                           {match.status}
                         </div>
+                        {match.processed && (
+                          <div style={{ fontSize: '0.6rem', color: 'var(--ucl-gold)', fontWeight: 900, marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                            <CheckCircle size={10} /> POINTS AWARDED
+                          </div>
+                        )}
                         <p style={{ fontSize: '0.65rem', opacity: 0.4, fontWeight: 700 }}>{new Date(match.kickoff_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
                       
@@ -450,6 +455,13 @@ export const AdminDashboard: React.FC = () => {
 
             <div className="admin-card" style={{ padding: '1.5rem', border: '1px solid rgba(255,0,0,0.2)' }}>
               <p style={{ color: '#ff3b30', fontSize: '0.6rem', marginBottom: '1rem', fontWeight: 900, letterSpacing: '1px' }}>SYSTEM TOOLS</p>
+              <button className="ucl-button" style={{ 
+                width: '100%', 
+                background: 'rgba(255,197,89,0.1)', 
+                border: '1px solid var(--ucl-gold)', 
+                color: 'var(--ucl-gold)',
+                fontSize: '0.7rem' 
+              }} onClick={calculateRanks}>REFRESH RANKINGS</button>
               <button className="ucl-button" style={{ 
                 width: '100%', 
                 background: 'rgba(255,59,48,0.1)', 
