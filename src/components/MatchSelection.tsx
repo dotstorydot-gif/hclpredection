@@ -33,6 +33,22 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
 
   useEffect(() => {
     fetchData();
+
+    // Subscribe to match updates to keep the fixtures list live
+    const channel = supabase
+      .channel('public:matches')
+      .on(
+        'postgres_changes', 
+        { event: '*', table: 'matches', schema: 'public' }, 
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchData]);
 
   const getUserChoice = (matchId: string) => {
