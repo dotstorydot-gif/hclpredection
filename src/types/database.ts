@@ -156,6 +156,7 @@ export type Database = {
           registration_id: string
           venue_id: string
           hit_time: string
+          goal_number: number
           created_at: string
         }
         Insert: {
@@ -164,6 +165,7 @@ export type Database = {
           registration_id: string
           venue_id: string
           hit_time?: string
+          goal_number?: number
           created_at?: string
         }
         Update: {
@@ -172,6 +174,7 @@ export type Database = {
           registration_id?: string
           venue_id?: string
           hit_time?: string
+          goal_number?: number
           created_at?: string
         }
         Relationships: [

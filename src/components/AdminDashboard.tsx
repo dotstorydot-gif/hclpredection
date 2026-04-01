@@ -139,28 +139,27 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const triggerBuzzer = async (matchId: string) => {
-    // 1. Clear previous hits for a fresh buzzer window
-    const { error: delError } = await supabase.from('buzzer_hits').delete().eq('match_id', matchId);
-    if (delError) {
-      alert(`Buzzer Clear Error: ${delError.message}`);
-      return;
-    }
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
     
-    // 2. Update DB (source of truth for late joiners)
+    // The Goal Number is the current total score + 1 (the goal being celebrated)
+    const goalNumber = (match.home_score || 0) + (match.away_score || 0);
+
+    // 1. Update DB (source of truth for late joiners)
     const { error: updError } = await supabase.from('matches').update({ buzzer_active: true }).eq('id', matchId);
     if (updError) {
       alert(`Buzzer Activation Error: ${updError.message}`);
       return;
     }
 
-    // 3. Send Broadcast for ultra-fast instant activation
+    // 2. Send Broadcast with Goal Number for ultra-fast instant activation
     const channel = supabase.channel(`match-${matchId}`);
     channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         channel.send({
           type: 'broadcast',
           event: 'activate-buzzer',
-          payload: { matchId }
+          payload: { matchId, goalNumber }
         });
       }
     });

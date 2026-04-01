@@ -28,11 +28,14 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
 
   const fetchStandings = React.useCallback(async () => {
     if (!localMatch) return;
+    const goalNumber = (localMatch.home_score || 0) + (localMatch.away_score || 0);
+    
     const { data } = await supabase
       .from('buzzer_hits')
       .select('*, registrations(name)')
       .eq('match_id', localMatch.id)
       .eq('venue_id', registration.venue_id)
+      .eq('goal_number', goalNumber)
       .order('hit_time', { ascending: true })
       .limit(5);
     setStandings(data || []);
@@ -116,13 +119,15 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
     setHasHit(true);
     setIsHitting(true);
     
+    const goalNumber = (localMatch.home_score || 0) + (localMatch.away_score || 0);
     const hitTime = Date.now();
     try {
       const { error: insertError } = await supabase.from('buzzer_hits').insert({
         registration_id: registration.id,
         match_id: localMatch.id,
         hit_time: new Date(hitTime).toISOString(),
-        venue_id: registration.venue_id
+        venue_id: registration.venue_id,
+        goal_number: goalNumber
       });
       
       if (insertError) {
