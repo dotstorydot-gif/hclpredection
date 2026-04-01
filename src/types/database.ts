@@ -200,6 +200,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_points_for_match: {
+        Args: {
+          m_id: string
+          win_choice: string
+        }
+        Returns: void
+      }
+      reset_all_player_points: {
+        Args: Record<PropertyKey, never>
+        Returns: void
+      }
       increment_points: {
         Args: {
           user_id: string

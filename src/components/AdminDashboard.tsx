@@ -60,42 +60,43 @@ export const AdminDashboard: React.FC = () => {
 
   const finishMatch = async (matchId: string) => {
     const match = matches.find(m => m.id === matchId);
-    if (!match || (match as any).processed) return;
+    if (!match || match.processed) return;
 
-    if (!confirm(`Finish ${match.home_team} vs ${match.away_team} and AWARD 10 POINTS to correct predictors?`)) return;
+    if (!confirm(`Finish ${match.home_team} vs ${match.away_team} and AWARD 10 POINTS to all winners?`)) return;
 
     setLoading(true);
     try {
       const winner = match.home_score > match.away_score ? 'HOME' : 
                      match.home_score < match.away_score ? 'AWAY' : 'DRAW';
 
-      const { data: correctPreds } = await supabase
-        .from('predictions')
-        .select('registration_id')
-        .eq('match_id', matchId)
-        .eq('winner_choice', winner);
+      // Call the high-performance database scorer
+      const { error } = await supabase.rpc('award_points_for_match', { 
+        m_id: matchId, 
+        win_choice: winner 
+      });
 
-      if (correctPreds && correctPreds.length > 0) {
-        for (const p of correctPreds) {
-          // Increment points for each winner
-          await supabase.rpc('increment_points', { user_id: p.registration_id, amount: 10 });
-        }
-      }
+      if (error) throw error;
 
-      await supabase.from('matches').update({ 
-        status: 'FINISHED', 
-        processed: true,
-        buzzer_active: false 
-      }).eq('id', matchId);
-
-      alert(`Match Processed! ${correctPreds?.length || 0} users awarded 10 points.`);
-      fetchMatches();
-      calculateRanks();
+      alert(`Match Processed Successfully! Rankings updated.`);
+      await fetchMatches();
+      await calculateRanks();
     } catch (err) {
-      alert('Award points failed. Ensure increment_points SQL is run.');
+      alert('Award points failed. Ensure you ran the ROBUST_SCORING.SQL in Supabase.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetEverything = async () => {
+    if (!confirm('☢️ RESET ALL POINTS AND MATCHES TO ZERO?')) return;
+    setLoading(true);
+    try {
+      await supabase.rpc('reset_all_player_points', {});
+      alert('Points reset to Zero!');
+      fetchMatches();
+      calculateRanks();
+    } catch (err) { alert('Reset failed. Check SQL.'); } finally { setLoading(false); }
   };
 
   useEffect(() => {
@@ -462,6 +463,13 @@ export const AdminDashboard: React.FC = () => {
                 color: 'var(--ucl-gold)',
                 fontSize: '0.7rem' 
               }} onClick={calculateRanks}>REFRESH RANKINGS</button>
+              <button className="ucl-button" style={{ 
+                width: '100%', 
+                background: 'rgba(255,197,89,0.05)', 
+                border: '1px solid rgba(255,255,255,0.1)', 
+                color: 'white',
+                fontSize: '0.7rem' 
+              }} onClick={resetEverything}>RESET ALL SCOREBOARDS</button>
               <button className="ucl-button" style={{ 
                 width: '100%', 
                 background: 'rgba(255,59,48,0.1)', 
