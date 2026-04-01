@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/database';
-import { Zap, Play, CheckCircle, Trophy, Layout } from 'lucide-react';
+import { Zap, Play, CheckCircle, Trophy, Layout, Square, RotateCw } from 'lucide-react';
 
 type Match = Database['public']['Tables']['matches']['Row'];
 
@@ -237,91 +237,119 @@ export const AdminDashboard: React.FC = () => {
       </nav>
 
       {activeTab === 'MATCHES' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '2rem' }}>
-          {matches.map(match => (
-            <div key={match.id} className={`admin-card ${match.buzzer_active ? 'buzzer-active-pulse' : ''}`}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start' }}>
-                <div>
-                  <div className="vs-badge" style={{ 
-                    background: match.status === 'LIVE' ? 'rgba(255,43,0,0.2)' : 'rgba(255,255,255,0.05)',
-                    color: match.status === 'LIVE' ? 'var(--ucl-electric)' : 'inherit',
-                    border: match.status === 'LIVE' ? '1px solid var(--ucl-electric)' : '1px solid transparent',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                    marginBottom: '0.5rem'
-                  }}>
-                    {match.status === 'LIVE' && <div className="live-dot" style={{ width: '6px', height: '6px' }} />}
-                    {match.status}
-                  </div>
-                  <p style={{ fontSize: '0.65rem', opacity: 0.4, fontWeight: 700 }}>{new Date(match.kickoff_time).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-                </div>
-                {match.status === 'LIVE' && (
-                  <div style={{ textAlign: 'right' }}>
-                    <div className="venue-badge" style={{ marginBottom: '0.5rem' }}>BUZZER {match.buzzer_active ? 'ACTIVE' : 'READY'}</div>
-                  </div>
-                )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
+          {Object.entries(
+            matches.reduce((acc, m) => {
+              const d = new Date(m.kickoff_time);
+              const date = d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+              if (!acc[date]) acc[date] = [];
+              acc[date].push(m);
+              return acc;
+            }, {} as Record<string, Match[]>)
+          ).map(([date, dayMatches]) => (
+            <div key={date} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '0 1rem' }}>
+                <div style={{ height: '1px', flex: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1))' }} />
+                <h2 style={{ fontSize: '0.8rem', fontWeight: 900, letterSpacing: '4px', textTransform: 'uppercase', color: 'var(--ucl-gold)', opacity: 0.8 }}>{date}</h2>
+                <div style={{ height: '1px', flex: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.1), transparent)' }} />
               </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '2rem' }}>
+                {dayMatches.map(match => (
+                  <div key={match.id} className={`admin-card ${match.buzzer_active ? 'buzzer-active-pulse' : ''}`}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start' }}>
+                      <div>
+                        <div className="vs-badge" style={{ 
+                          background: match.status === 'LIVE' ? 'rgba(255,43,0,0.2)' : 'rgba(255,255,255,0.05)',
+                          color: match.status === 'LIVE' ? 'var(--ucl-electric)' : 'inherit',
+                          border: match.status === 'LIVE' ? '1px solid var(--ucl-electric)' : '1px solid transparent',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '8px',
+                          fontSize: '0.65rem',
+                          fontWeight: 900,
+                          letterSpacing: '1px',
+                          marginBottom: '0.5rem'
+                        }}>
+                          {match.status === 'LIVE' && <div className="live-dot" style={{ width: '6px', height: '6px' }} />}
+                          {match.status}
+                        </div>
+                        <p style={{ fontSize: '0.65rem', opacity: 0.4, fontWeight: 700 }}>{new Date(match.kickoff_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {match.status === 'UPCOMING' && (
+                          <button className="ucl-button" style={{ padding: '0.6rem 1rem', fontSize: '0.65rem' }} onClick={() => updateMatch(match.id, { status: 'LIVE' })}>
+                            <Play size={12} /> INITIATE
+                          </button>
+                        )}
+                        {match.status === 'LIVE' && (
+                          <button className="ucl-button" style={{ padding: '0.6rem 1rem', fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)' }} onClick={() => updateMatch(match.id, { status: 'FINISHED', buzzer_active: false })}>
+                            <Square size={12} /> FINISH
+                          </button>
+                        )}
+                        {match.status === 'FINISHED' && (
+                          <button className="ucl-button" style={{ padding: '0.6rem 1rem', fontSize: '0.65rem', opacity: 0.4 }} onClick={() => updateMatch(match.id, { status: 'UPCOMING', home_score: 0, away_score: 0 })}>
+                            <RotateCw size={12} /> RESET
+                          </button>
+                        )}
+                      </div>
+                    </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                  <img src={match.home_logo || ''} alt="" style={{ width: '40px', height: '40px', marginBottom: '0.8rem', opacity: 0.8 }} />
-                  <p style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '1rem', textTransform: 'uppercase' }}>{match.home_team}</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                    <input 
-                      type="number" 
-                      className="ucl-input" 
-                      style={{ width: '70px', textAlign: 'center', fontSize: '1.5rem', padding: '0.5rem' }} 
-                      value={match.home_score} 
-                      onChange={(e) => updateMatch(match.id, { home_score: parseInt(e.target.value) || 0 })} 
-                    />
-                    {match.status === 'LIVE' && (
-                      <button className="ucl-button goal-button-home" style={{ width: '100%', fontSize: '0.6rem' }} onClick={() => recordGoal(match.id, 'HOME')}>+ GOAL</button>
-                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+                      <div style={{ flex: 1, textAlign: 'center' }}>
+                        <img src={match.home_logo || ''} alt="" style={{ width: '40px', height: '40px', marginBottom: '0.8rem', opacity: 0.8 }} />
+                        <p style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '1rem', textTransform: 'uppercase' }}>{match.home_team}</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                          <input 
+                            type="number" 
+                            className="ucl-input" 
+                            style={{ width: '70px', textAlign: 'center', fontSize: '1.5rem', padding: '0.5rem' }} 
+                            value={match.home_score} 
+                            onChange={(e) => updateMatch(match.id, { home_score: parseInt(e.target.value) || 0 })} 
+                          />
+                          {match.status === 'LIVE' && (
+                            <button className="ucl-button goal-button-home" style={{ width: '100%', fontSize: '0.6rem' }} onClick={() => recordGoal(match.id, 'HOME')}>+ GOAL</button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ fontWeight: 100, fontSize: '2rem', opacity: 0.2 }}>:</div>
+
+                      <div style={{ flex: 1, textAlign: 'center' }}>
+                        <img src={match.away_logo || ''} alt="" style={{ width: '40px', height: '40px', marginBottom: '0.8rem', opacity: 0.8 }} />
+                        <p style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '1rem', textTransform: 'uppercase' }}>{match.away_team}</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                          <input 
+                            type="number" 
+                            className="ucl-input" 
+                            style={{ width: '70px', textAlign: 'center', fontSize: '1.5rem', padding: '0.5rem' }} 
+                            value={match.away_score} 
+                            onChange={(e) => updateMatch(match.id, { away_score: parseInt(e.target.value) || 0 })} 
+                          />
+                          {match.status === 'LIVE' && (
+                            <button className="ucl-button goal-button-away" style={{ width: '100%', fontSize: '0.6rem' }} onClick={() => recordGoal(match.id, 'AWAY')}>+ GOAL</button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                      {match.status === 'LIVE' && (
+                        <>
+                          <button className="ucl-button" style={{ background: 'var(--ucl-gold)', color: 'black' }} onClick={() => triggerBuzzer(match.id)}>
+                            <Zap size={14} /> MANUAL BUZZER
+                          </button>
+                          <button className="ucl-button" style={{ background: 'rgba(255,255,255,0.1)' }} onClick={() => updateMatch(match.id, { status: 'FINISHED' })}>
+                            <CheckCircle size={14} /> FINISH MATCH
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-
-                <div style={{ fontWeight: 100, fontSize: '2rem', opacity: 0.2 }}>:</div>
-
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                  <img src={match.away_logo || ''} alt="" style={{ width: '40px', height: '40px', marginBottom: '0.8rem', opacity: 0.8 }} />
-                  <p style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '1rem', textTransform: 'uppercase' }}>{match.away_team}</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                    <input 
-                      type="number" 
-                      className="ucl-input" 
-                      style={{ width: '70px', textAlign: 'center', fontSize: '1.5rem', padding: '0.5rem' }} 
-                      value={match.away_score} 
-                      onChange={(e) => updateMatch(match.id, { away_score: parseInt(e.target.value) || 0 })} 
-                    />
-                    {match.status === 'LIVE' && (
-                      <button className="ucl-button goal-button-away" style={{ width: '100%', fontSize: '0.6rem' }} onClick={() => recordGoal(match.id, 'AWAY')}>+ GOAL</button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
-                {match.status === 'UPCOMING' && (
-                  <button className="ucl-button" style={{ gridColumn: 'span 2', padding: '1rem' }} onClick={() => updateMatch(match.id, { status: 'LIVE' })}>
-                    <Play size={14} /> INITIATE MATCH
-                  </button>
-                )}
-                {match.status === 'LIVE' && (
-                  <>
-                    <button className="ucl-button" style={{ background: 'var(--ucl-gold)', color: 'black' }} onClick={() => triggerBuzzer(match.id)}>
-                      <Zap size={14} /> MANUAL BUZZER
-                    </button>
-                    <button className="ucl-button" style={{ background: 'rgba(255,255,255,0.1)' }} onClick={() => updateMatch(match.id, { status: 'FINISHED' })}>
-                      <CheckCircle size={14} /> FINISH
-                    </button>
-                  </>
-                )}
-                {match.status === 'FINISHED' && (
-                  <button className="ucl-button" style={{ gridColumn: 'span 2', opacity: 0.3, background: 'none', border: '1px solid rgba(255,255,255,0.2)' }} onClick={() => updateMatch(match.id, { status: 'UPCOMING', home_score: 0, away_score: 0 })}>
-                    RESET MATCH DATA
-                  </button>
-                )}
+                ))}
               </div>
             </div>
           ))}
