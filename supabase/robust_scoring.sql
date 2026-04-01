@@ -1,13 +1,13 @@
--- Super Scorer Reliability Engine V2: 300+ users, venue-specific bonuses
--- 1. Ensure columns exist
-ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0;
-ALTER TABLE public.matches ADD COLUMN IF NOT EXISTS processed BOOLEAN DEFAULT false;
-ALTER TABLE public.buzzer_hits ADD COLUMN IF NOT EXISTS goal_number INTEGER DEFAULT 0;
+-- Stamp System Refactor: 1 Stamp per Achievement
+-- 1. Ensure Stamp columns exist
+ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS stamps_login INTEGER DEFAULT 1;
+ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS stamps_prediction INTEGER DEFAULT 0;
+ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS stamps_buzzer INTEGER DEFAULT 0;
 
--- 2. Index for high-speed "First at Venue" lookups
-CREATE INDEX IF NOT EXISTS idx_buzzer_hits_venue_goal ON public.buzzer_hits(match_id, venue_id, goal_number, hit_time ASC);
+-- 2. Index for Leaderboard (Total Stamps Ranking)
+CREATE INDEX IF NOT EXISTS idx_registrations_stamps_total ON public.registrations((stamps_login + stamps_prediction + stamps_buzzer) DESC);
 
--- 3. Automatic "Instant Scorer" Function: Awards 5 points to the first hitter per goal/venue
+-- 3. Automatic "Buzzer Stamp" Scorer: Award 1 Stamp to the first hitter per goal/venue
 CREATE OR REPLACE FUNCTION award_instant_buzzer_points()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -19,28 +19,28 @@ BEGIN
       AND goal_number = NEW.goal_number
       AND id <> NEW.id
   ) THEN
-    -- This user is the Venue Champion! Award 5 points instantly.
+    -- Venue Champion! Award 1 Buzzer Stamp.
     UPDATE public.registrations
-    SET points = COALESCE(points, 0) + 5
+    SET stamps_buzzer = COALESCE(stamps_buzzer, 0) + 1
     WHERE id = NEW.registration_id;
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 4. Set up the Trigger for Instant Rewards
+-- 4. Set up the Trigger
 DROP TRIGGER IF EXISTS trg_instant_buzzer_points ON public.buzzer_hits;
 CREATE TRIGGER trg_instant_buzzer_points
 BEFORE INSERT ON public.buzzer_hits
 FOR EACH ROW EXECUTE FUNCTION award_instant_buzzer_points();
 
--- 5. Prediction Scorer RPC: Processes correct predictors at the end of the match
+-- 5. Prediction Scorer RPC: Awards 1 Stamp for matching winners
 CREATE OR REPLACE FUNCTION award_points_for_match(m_id UUID, win_choice TEXT)
 RETURNS VOID AS $$
 BEGIN
-  -- 1. Award 10 points to correct predictors
+  -- 1. Award 1 Prediction Stamp to correct predictors
   UPDATE public.registrations
-  SET points = COALESCE(points, 0) + 10
+  SET stamps_prediction = COALESCE(stamps_prediction, 0) + 1
   WHERE id IN (
     SELECT registration_id 
     FROM public.predictions 
@@ -58,7 +58,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION reset_all_player_points()
 RETURNS VOID AS $$
 BEGIN
-  UPDATE public.registrations SET points = 0;
+  UPDATE public.registrations SET stamps_login = 1, stamps_prediction = 0, stamps_buzzer = 0;
   UPDATE public.matches SET processed = false;
   DELETE FROM public.buzzer_hits;
 END;

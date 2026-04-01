@@ -35,6 +35,9 @@ export type Database = {
           phone: string
           venue_id: string
           points: number
+          stamps_login: number
+          stamps_prediction: number
+          stamps_buzzer: number
           created_at: string
         }
         Insert: {
@@ -44,6 +47,9 @@ export type Database = {
           phone: string
           venue_id: string
           points?: number
+          stamps_login?: number
+          stamps_prediction?: number
+          stamps_buzzer?: number
           created_at?: string
         }
         Update: {
@@ -53,6 +59,9 @@ export type Database = {
           phone?: string
           venue_id?: string
           points?: number
+          stamps_login?: number
+          stamps_prediction?: number
+          stamps_buzzer?: number
           created_at?: string
         }
         Relationships: [

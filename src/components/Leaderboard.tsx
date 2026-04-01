@@ -39,7 +39,7 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
           .limit(20);
         
         const winners = (data || []).map(d => ({
-          name: (d.registrations as any)?.name || 'Anonymous',
+          name: (d.registrations as { name: string } | null)?.name || 'Anonymous',
           hit_timestamp: d.hit_time || '',
           venue_id: d.venue_id
         }));
@@ -47,12 +47,15 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
       } else {
         const { data, error } = await supabase
           .from('registrations')
-          .select('name, points')
-          .order('points', { ascending: false })
-          .limit(20);
+          .select('name, stamps_login, stamps_prediction, stamps_buzzer');
         
         if (!error && data) {
-          setPredictionRanks(data as PredictionRank[]);
+          const calculated = (data || []).map(r => ({
+            name: r.name,
+            points: (r.stamps_login || 0) + (r.stamps_prediction || 0) + (r.stamps_buzzer || 0)
+          })).sort((a,b) => b.points - a.points).slice(0, 20);
+          
+          setPredictionRanks(calculated);
         }
       }
     } finally {
@@ -97,7 +100,7 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
         }}
       >
         <h2 style={{ fontSize: '1.2rem', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '1.5rem', color: 'var(--ucl-gold)', textAlign: 'center', fontWeight: 900 }}>
-          {tab === 'buzzer' ? '⚡️ FASTEST CLICK RANKING ⚡️' : '🏆 GLOBAL PREDICTION RANKING 🏆'}
+          {tab === 'buzzer' ? '⚡️ FASTEST CLICK RANKING ⚡️' : '🏆 GLOBAL STAMP RANKING 🏆'}
         </h2>
 
         {loading ? (
@@ -129,6 +132,7 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                       <Trophy size={12} color="var(--ucl-gold)" />
                       <span style={{ fontWeight: 900, color: 'var(--ucl-gold)', fontSize: '0.9rem' }}>{r.points || 0}</span>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 900, opacity: 0.4 }}>STAMPS</span>
                     </div>
                   </div>
                 ))

@@ -36,6 +36,7 @@ export const Registration: React.FC<Props> = ({ onComplete }) => {
           name,
           phone,
           venue_id: selectedVenue,
+          stamps_login: 1
         })
         .select()
         .single();
