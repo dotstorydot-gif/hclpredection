@@ -107,9 +107,15 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
     }
   }, [isBuzzerActive, fetchStandings]);
 
-  const handleBuzzerHit = async () => {
-    if (!isBuzzerActive || hasHit || !localMatch) return;
+  const [isHitting, setIsHitting] = useState(false);
 
+  const handleBuzzerHit = async () => {
+    if (!isBuzzerActive || hasHit || !localMatch || isHitting) return;
+
+    // Optimistic UI: Hide buzzer instantly on click
+    setHasHit(true);
+    setIsHitting(true);
+    
     const hitTime = Date.now();
     try {
       const { error: insertError } = await supabase.from('buzzer_hits').insert({
@@ -120,16 +126,22 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
       });
       
       if (insertError) {
+        // Rollback on error
+        setHasHit(false);
+        setIsHitting(false);
         alert('Could not record hit. Please check your signal!');
         console.error('Insert error:', insertError);
         return;
       }
 
-      setHasHit(true);
       fetchStandings();
     } catch (e) {
+      setHasHit(false);
+      setIsHitting(false);
       alert('Internal game error. Please try again.');
       console.error('Buzzer hit exception:', e);
+    } finally {
+      setIsHitting(false);
     }
   };
 
