@@ -38,12 +38,23 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
     setStandings(data || []);
   }, [localMatch, registration.venue_id]);
 
+  const [lastScore, setLastScore] = useState((initialMatch?.home_score || 0) + (initialMatch?.away_score || 0));
+
   // Sync local buzzer state and scores
   useEffect(() => {
     if (!localMatch) return;
+    
+    const currentScore = (localMatch.home_score || 0) + (localMatch.away_score || 0);
+    const buzzerTransitionedOn = !isBuzzerActive && localMatch.buzzer_active;
+
+    // Only reset the "hit" status if a score happened OR the buzzer was just turned ON
+    if (currentScore > lastScore || buzzerTransitionedOn) {
+      setHasHit(false);
+      setLastScore(currentScore);
+    }
+
     setIsBuzzerActive(!!localMatch.buzzer_active);
-    setHasHit(false);
-  }, [localMatch]);
+  }, [localMatch, isBuzzerActive, lastScore]);
 
   useEffect(() => {
     if (!initialMatch) return;
