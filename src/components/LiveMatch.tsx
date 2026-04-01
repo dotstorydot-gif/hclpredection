@@ -85,24 +85,30 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
     };
     loadStandings();
   }, [isBuzzerActive, fetchStandings]);
-极
 
   const handleBuzzerHit = async () => {
     if (!isBuzzerActive || hasHit || !match) return;
 
     const hitTime = Date.now();
-    setHasHit(true);
-
     try {
-      await supabase.from('buzzer_hits').insert({
+      const { error: insertError } = await supabase.from('buzzer_hits').insert({
         registration_id: registration.id,
         match_id: match.id,
         hit_time: new Date(hitTime).toISOString(),
         venue_id: registration.venue_id
       });
+      
+      if (insertError) {
+        alert('Could not record hit. Please check your signal!');
+        console.error('Insert error:', insertError);
+        return;
+      }
+
+      setHasHit(true);
       fetchStandings();
-    } catch (error) {
-      console.error('Buzzer hit failed:', error);
+    } catch (e) {
+      alert('Internal game error. Please try again.');
+      console.error('Buzzer hit exception:', e);
     }
   };
 
