@@ -7,7 +7,7 @@ type Match = Database['public']['Tables']['matches']['Row'];
 
 interface BuzzerHit {
   id: string;
-  name: string;
+  registrations: { name: string } | null;
   venue_id: string;
   hit_time: string;
   match_id: string;
@@ -23,6 +23,7 @@ export const AdminDashboard: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [buzzerHits, setBuzzerHits] = useState<BuzzerHit[]>([]);
   const [ranks, setRanks] = useState<Rank[]>([]);
+  const [venues, setVenues] = useState<Database['public']['Tables']['venues']['Row'][]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMatches = useCallback(async () => {
@@ -33,21 +34,19 @@ export const AdminDashboard: React.FC = () => {
     setMatches(data || []);
   }, []);
 
+  const fetchVenues = useCallback(async () => {
+    const { data } = await supabase.from('venues').select('*');
+    setVenues(data || []);
+  }, []);
+
   const fetchBuzzerHits = useCallback(async () => {
     const { data } = await supabase
       .from('buzzer_hits')
       .select('*, registrations(name)')
       .order('hit_time', { ascending: false })
-      .limit(50);
+      .limit(100);
     
-    const hits = (data || []).map(d => ({
-      id: d.id,
-      name: (d.registrations as any)?.name || 'Anonymous',
-      venue_id: d.venue_id,
-      hit_time: d.hit_time || '',
-      match_id: d.match_id
-    }));
-    setBuzzerHits(hits);
+    setBuzzerHits(data || []);
   }, []);
 
   const calculateRanks = useCallback(async () => {
@@ -75,9 +74,12 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await fetchMatches();
-      await fetchBuzzerHits();
-      await calculateRanks();
+      await Promise.all([
+        fetchMatches(),
+        fetchVenues(),
+        fetchBuzzerHits(),
+        calculateRanks()
+      ]);
       setLoading(false);
     };
     init();
@@ -97,7 +99,7 @@ export const AdminDashboard: React.FC = () => {
     return () => {
       supabase.removeChannel(buzzerSub);
     };
-  }, [fetchMatches, fetchBuzzerHits, calculateRanks]);
+  }, [fetchMatches, fetchVenues, fetchBuzzerHits, calculateRanks]);
 
   const updateMatch = async (matchId: string, updates: Partial<Match>) => {
     const { error } = await supabase.from('matches').update(updates).eq('id', matchId);
@@ -105,14 +107,43 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const triggerBuzzer = async (matchId: string) => {
+    // Clear previous hits for a fresh buzzer window
     await supabase.from('buzzer_hits').delete().eq('match_id', matchId);
+    
+    // Send broadcast for instant client activation (fastest)
+    const channel = supabase.channel(`match-${matchId}`);
+    await channel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await channel.send({
+          type: 'broadcast',
+          event: 'activate-buzzer',
+          payload: { matchId }
+        });
+      }
+    });
+
+    // Update DB (source of truth for late joiners)
     await supabase.from('matches').update({ buzzer_active: true }).eq('id', matchId);
     
     setTimeout(async () => {
       await supabase.from('matches').update({ buzzer_active: false }).eq('id', matchId);
       fetchMatches();
-    }, 15000);
+    }, 120000);
     fetchMatches();
+  };
+
+  const recordGoal = async (matchId: string, side: 'HOME' | 'AWAY') => {
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    const updates = side === 'HOME' 
+      ? { home_score: (match.home_score || 0) + 1 } 
+      : { away_score: (match.away_score || 0) + 1 };
+
+    const { error } = await supabase.from('matches').update(updates).eq('id', matchId);
+    if (!error) {
+      await triggerBuzzer(matchId);
+    }
   };
 
   const wipeAllData = async () => {
@@ -135,65 +166,146 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="container" style={{ textAlign: 'center', marginTop: '5rem' }}>Synchronizing Admin Data...</div>;
+  if (loading) return (
+    <div className="container" style={{ textAlign: 'center', marginTop: '10rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem' }}>
+      <div className="live-dot" style={{ width: '40px', height: '40px' }}></div>
+      <p style={{ fontWeight: 800, letterSpacing: '2px', opacity: 0.6 }}>SYNCHRONIZING UCL COMMAND CENTER...</p>
+    </div>
+  );
 
   return (
-    <div className="container" style={{ maxWidth: '800px', width: '95%', margin: '0 auto', paddingTop: '2rem' }}>
-      <h1 className="ucl-title" style={{ fontSize: '2rem', marginBottom: '2rem' }}>ADMIN CONTROL</h1>
+    <div className="container" style={{ maxWidth: '1200px', width: '95%', margin: '0 auto', paddingBottom: '4rem' }}>
+      <header style={{ padding: '3rem 0', textAlign: 'center' }}>
+        <h1 className="ucl-title" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', letterSpacing: '2px' }}>COMMAND CENTER</h1>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', alignItems: 'center', opacity: 0.6 }}>
+          <div className="live-indicator"><div className="live-dot" /> SYSTEM ONLINE</div>
+          <span>•</span>
+          <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>{matches.filter(m => m.status === 'LIVE').length} ACTIVE MATCHES</span>
+        </div>
+      </header>
       
-      {/* Tab Navigation */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', background: 'rgba(0,0,0,0.2)', padding: '0.4rem', borderRadius: '12px' }}>
-        <button 
-          onClick={() => setActiveTab('MATCHES')}
-          className={`ucl-button ${activeTab === 'MATCHES' ? '' : 'inactive'}`}
-          style={{ flex: 1, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-        >
-          <Layout size={16} /> MATCHES
-        </button>
-        <button 
-          onClick={() => setActiveTab('BUZZER')}
-          className={`ucl-button ${activeTab === 'BUZZER' ? '' : 'inactive'}`}
-          style={{ flex: 1, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-        >
-          <Zap size={16} /> LIVE BUZZER
-        </button>
-        <button 
-          onClick={() => setActiveTab('RANKS')}
-          className={`ucl-button ${activeTab === 'RANKS' ? '' : 'inactive'}`}
-          style={{ flex: 1, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-        >
-          <Trophy size={16} /> ALL RANKS
-        </button>
-      </div>
+      {/* Premium Tab Navigation */}
+      <nav style={{ 
+        display: 'flex', 
+        gap: '0.5rem', 
+        marginBottom: '3rem', 
+        background: 'rgba(255,255,255,0.03)', 
+        padding: '0.6rem', 
+        borderRadius: '20px',
+        border: '1px solid rgba(255,255,255,0.05)',
+        maxWidth: '600px',
+        margin: '0 auto 3rem auto'
+      }}>
+        {(['MATCHES', 'BUZZER', 'RANKS'] as const).map(tab => (
+          <button 
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`ucl-button ${activeTab === tab ? '' : 'inactive'}`}
+            style={{ 
+              flex: 1, 
+              fontSize: '0.75rem', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '0.6rem',
+              borderRadius: '14px',
+              background: activeTab === tab ? undefined : 'transparent'
+            }}
+          >
+            {tab === 'MATCHES' && <Layout size={16} />}
+            {tab === 'BUZZER' && <Zap size={16} />}
+            {tab === 'RANKS' && <Trophy size={16} />}
+            {tab}
+          </button>
+        ))}
+      </nav>
 
       {activeTab === 'MATCHES' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '2rem' }}>
           {matches.map(match => (
-            <div key={match.id} className="glass-card" style={{ border: match.status === 'LIVE' ? '2px solid var(--ucl-electric)' : '1px solid var(--ucl-glass-border)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
-                <span className="vs-badge" style={{ background: match.status === 'LIVE' ? 'red' : 'rgba(255,255,255,0.1)' }}>{match.status}</span>
-                <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>{new Date(match.kickoff_time).toLocaleString()}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', marginBottom: '1.5rem' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontWeight: 800, fontSize: '0.9rem', marginBottom: '0.5rem' }}>{match.home_team}</p>
-                  <input type="number" className="ucl-input" style={{ width: '60px', textAlign: 'center', fontSize: '1.2rem' }} value={match.home_score} onChange={(e) => updateMatch(match.id, { home_score: parseInt(e.target.value) || 0 })} />
+            <div key={match.id} className={`admin-card ${match.buzzer_active ? 'buzzer-active-pulse' : ''}`}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start' }}>
+                <div>
+                  <div className="vs-badge" style={{ 
+                    background: match.status === 'LIVE' ? 'rgba(255,43,0,0.2)' : 'rgba(255,255,255,0.05)',
+                    color: match.status === 'LIVE' ? 'var(--ucl-electric)' : 'inherit',
+                    border: match.status === 'LIVE' ? '1px solid var(--ucl-electric)' : '1px solid transparent',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    marginBottom: '0.5rem'
+                  }}>
+                    {match.status === 'LIVE' && <div className="live-dot" style={{ width: '6px', height: '6px' }} />}
+                    {match.status}
+                  </div>
+                  <p style={{ fontSize: '0.65rem', opacity: 0.4, fontWeight: 700 }}>{new Date(match.kickoff_time).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
-                <div style={{ fontWeight: 900 }}>VS</div>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontWeight: 800, fontSize: '0.9rem', marginBottom: '0.5rem' }}>{match.away_team}</p>
-                  <input type="number" className="ucl-input" style={{ width: '60px', textAlign: 'center', fontSize: '1.2rem' }} value={match.away_score} onChange={(e) => updateMatch(match.id, { away_score: parseInt(e.target.value) || 0 })} />
+                {match.status === 'LIVE' && (
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="venue-badge" style={{ marginBottom: '0.5rem' }}>BUZZER {match.buzzer_active ? 'ACTIVE' : 'READY'}</div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <img src={match.home_logo || ''} alt="" style={{ width: '40px', height: '40px', marginBottom: '0.8rem', opacity: 0.8 }} />
+                  <p style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '1rem', textTransform: 'uppercase' }}>{match.home_team}</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                    <input 
+                      type="number" 
+                      className="ucl-input" 
+                      style={{ width: '70px', textAlign: 'center', fontSize: '1.5rem', padding: '0.5rem' }} 
+                      value={match.home_score} 
+                      onChange={(e) => updateMatch(match.id, { home_score: parseInt(e.target.value) || 0 })} 
+                    />
+                    {match.status === 'LIVE' && (
+                      <button className="ucl-button goal-button-home" style={{ width: '100%', fontSize: '0.6rem' }} onClick={() => recordGoal(match.id, 'HOME')}>+ GOAL</button>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ fontWeight: 100, fontSize: '2rem', opacity: 0.2 }}>:</div>
+
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <img src={match.away_logo || ''} alt="" style={{ width: '40px', height: '40px', marginBottom: '0.8rem', opacity: 0.8 }} />
+                  <p style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '1rem', textTransform: 'uppercase' }}>{match.away_team}</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                    <input 
+                      type="number" 
+                      className="ucl-input" 
+                      style={{ width: '70px', textAlign: 'center', fontSize: '1.5rem', padding: '0.5rem' }} 
+                      value={match.away_score} 
+                      onChange={(e) => updateMatch(match.id, { away_score: parseInt(e.target.value) || 0 })} 
+                    />
+                    {match.status === 'LIVE' && (
+                      <button className="ucl-button goal-button-away" style={{ width: '100%', fontSize: '0.6rem' }} onClick={() => recordGoal(match.id, 'AWAY')}>+ GOAL</button>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                {match.status === 'UPCOMING' && <button className="ucl-button" style={{ gridColumn: 'span 2' }} onClick={() => updateMatch(match.id, { status: 'LIVE' })}><Play size={14} /> START MATCH</button>}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                {match.status === 'UPCOMING' && (
+                  <button className="ucl-button" style={{ gridColumn: 'span 2', padding: '1rem' }} onClick={() => updateMatch(match.id, { status: 'LIVE' })}>
+                    <Play size={14} /> INITIATE MATCH
+                  </button>
+                )}
                 {match.status === 'LIVE' && (
                   <>
-                    <button className="ucl-button" style={{ background: 'var(--ucl-gold)', color: 'black' }} onClick={() => triggerBuzzer(match.id)}><Zap size={14} /> TRIGGER BUZZER</button>
-                    <button className="ucl-button" onClick={() => updateMatch(match.id, { status: 'FINISHED' })}><CheckCircle size={14} /> FINISH</button>
+                    <button className="ucl-button" style={{ background: 'var(--ucl-gold)', color: 'black' }} onClick={() => triggerBuzzer(match.id)}>
+                      <Zap size={14} /> MANUAL BUZZER
+                    </button>
+                    <button className="ucl-button" style={{ background: 'rgba(255,255,255,0.1)' }} onClick={() => updateMatch(match.id, { status: 'FINISHED' })}>
+                      <CheckCircle size={14} /> FINISH
+                    </button>
                   </>
                 )}
-                {match.status === 'FINISHED' && <button className="ucl-button" style={{ gridColumn: 'span 2', opacity: 0.5 }} onClick={() => updateMatch(match.id, { status: 'UPCOMING', home_score: 0, away_score: 0 })}>RESET MATCH</button>}
+                {match.status === 'FINISHED' && (
+                  <button className="ucl-button" style={{ gridColumn: 'span 2', opacity: 0.3, background: 'none', border: '1px solid rgba(255,255,255,0.2)' }} onClick={() => updateMatch(match.id, { status: 'UPCOMING', home_score: 0, away_score: 0 })}>
+                    RESET MATCH DATA
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -201,51 +313,121 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === 'BUZZER' && (
-        <div className="glass-card" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', color: 'var(--ucl-gold)', textAlign: 'center' }}>REAL-TIME BUZZER HITS</h2>
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            {buzzerHits.length > 0 ? buzzerHits.map((h, i) => (
-              <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <div>
-                  <p style={{ fontWeight: 800 }}>{h.name}</p>
-                  <p style={{ fontSize: '0.7rem', opacity: 0.5 }}>Venue: {h.venue_id}</p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ color: 'var(--ucl-gold)', fontWeight: 900 }}>{i + 1}</p>
-                  <p style={{ fontSize: '0.6rem', opacity: 0.4 }}>{new Date(h.hit_time).toLocaleTimeString()}</p>
-                </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', alignItems: 'start' }}>
+          <div className="admin-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 900 }}>REAL-TIME BUZZER FEED</h2>
+              <div className="live-indicator"><div className="live-dot" /> STREAMING</div>
+            </div>
+            <div style={{ maxHeight: '600px', overflowY: 'auto', paddingRight: '1rem' }}>
+              {buzzerHits.length > 0 ? buzzerHits.map((h, i) => {
+                const venueName = venues.find(v => v.id === h.venue_id)?.name || 'Unknown Venue';
+                return (
+                  <div key={h.id} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    padding: '1.2rem', 
+                    background: i === 0 ? 'rgba(197, 160, 89, 0.05)' : 'transparent',
+                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: i === 0 ? '12px' : '0',
+                    marginBottom: i === 0 ? '0.5rem' : '0'
+                  }}>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      <span style={{ fontSize: '1.2rem', fontWeight: 900, color: i === 0 ? 'var(--ucl-gold)' : 'rgba(255,255,255,0.2)', width: '30px' }}>{i + 1}</span>
+                      <div>
+                        <p style={{ fontWeight: 800, fontSize: '1rem' }}>{h.registrations?.name || 'Anonymous'}</p>
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.3rem' }}>
+                          <span className="venue-badge">{venueName}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ color: 'var(--ucl-gold)', fontWeight: 900, fontSize: '0.7rem' }}>{new Date(h.hit_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', ...({ fractionalSecondDigits: 3 } as object) })}</p>
+                      <p style={{ fontSize: '0.6rem', opacity: 0.3, marginTop: '0.3rem' }}>MATCH ID: {h.match_id.split('-')[0]}</p>
+                    </div>
+                  </div>
+                );
+              }) : <div style={{ textAlign: 'center', opacity: 0.5, padding: '4rem' }}>
+                <Zap size={40} style={{ marginBottom: '1rem', opacity: 0.2 }} />
+                <p>Awaiting game activity...</p>
+              </div>}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="admin-card" style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '0.8rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '1px', opacity: 0.6 }}>VENUE ACTIVITY</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {venues.map(v => {
+                  const count = buzzerHits.filter(h => h.venue_id === v.id).length;
+                  const total = buzzerHits.length || 1;
+                  const percent = Math.round((count / total) * 100);
+                  return (
+                    <div key={v.id}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', fontWeight: 800, marginBottom: '0.4rem' }}>
+                        <span>{v.name}</span>
+                        <span style={{ color: 'var(--ucl-gold)' }}>{count} hits</span>
+                      </div>
+                      <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px' }}>
+                        <div style={{ height: '100%', width: `${percent}%`, background: 'var(--ucl-gold)', borderRadius: '2px', transition: 'width 0.5s ease' }} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )) : <div style={{ textAlign: 'center', opacity: 0.5, padding: '2rem' }}>Waiting for hits...</div>}
+            </div>
+
+            <div className="admin-card" style={{ padding: '1.5rem', border: '1px solid rgba(255,0,0,0.2)' }}>
+              <p style={{ color: '#ff3b30', fontSize: '0.6rem', marginBottom: '1rem', fontWeight: 900, letterSpacing: '1px' }}>SYSTEM TOOLS</p>
+              <button className="ucl-button" style={{ 
+                width: '100%', 
+                background: 'rgba(255,59,48,0.1)', 
+                border: '1px solid #ff3b30', 
+                color: '#ff3b30',
+                fontSize: '0.7rem' 
+              }} onClick={wipeAllData}>WIPE ALL TRANSACTIONS</button>
+            </div>
           </div>
         </div>
       )}
 
       {activeTab === 'RANKS' && (
-        <div className="glass-card" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', color: 'var(--ucl-gold)', textAlign: 'center' }}>GLOBAL PREDICTION STANDINGS</h2>
-          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+        <div className="admin-card" style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+            <h2 style={{ fontSize: '1.3rem', fontWeight: 900 }}>GLOBAL STANDINGS</h2>
+            <Trophy size={24} color="var(--ucl-gold)" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {ranks.map((r, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={{ opacity: 0.5 }}>#{i+1}</span>
-                  <span style={{ fontWeight: 700 }}>{r.name}</span>
+              <div key={i} style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                padding: '1.2rem', 
+                background: i < 3 ? 'rgba(255,255,255,0.03)' : 'transparent',
+                borderRadius: '16px',
+                border: i < 3 ? '1px solid rgba(197, 160, 89, 0.1)' : '1px solid transparent'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                  <span style={{ 
+                    fontSize: i < 3 ? '1.2rem' : '0.9rem', 
+                    fontWeight: 900, 
+                    opacity: i < 3 ? 1 : 0.3,
+                    color: i === 0 ? 'var(--ucl-gold)' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'white'
+                  }}>#{i+1}</span>
+                  <span style={{ fontWeight: 800, fontSize: '1rem' }}>{r.name}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Trophy size={14} color="var(--ucl-gold)" />
-                  <span style={{ fontWeight: 900, color: 'var(--ucl-gold)' }}>{r.points} pts</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                  <span style={{ fontWeight: 900, color: 'var(--ucl-gold)', fontSize: '1.1rem' }}>{r.points}</span>
+                  <span style={{ fontSize: '0.6rem', fontWeight: 700, opacity: 0.4 }}>PTS</span>
                 </div>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid rgba(255,0,0,0.2)', textAlign: 'center' }}>
-            <p style={{ color: 'red', fontSize: '0.7rem', marginBottom: '0.5rem', fontWeight: 800 }}>DANGER ZONE</p>
-            <button className="ucl-button" style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid red', color: 'red' }} onClick={wipeAllData}>WIPE EVERYTHING</button>
-          </div>
         </div>
       )}
       
-      <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-        <button className="ucl-button" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', opacity: 0.5 }} onClick={() => window.location.reload()}>SYNC DATA</button>
+      <div style={{ marginTop: '4rem', textAlign: 'center' }}>
+        <button className="ucl-button" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', opacity: 0.4, fontSize: '0.7rem' }} onClick={() => window.location.reload()}>MANUAL SYSTEM SYNC</button>
       </div>
     </div>
   );

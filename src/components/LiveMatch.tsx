@@ -19,12 +19,26 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
   useEffect(() => {
     if (!match) return;
 
-    // Listen for buzzer activation for THIS specific match
+    // 1. Listen for Broadcast (Ultra-fast, ephemeral)
     const channel = supabase.channel(`match-${match.id}`)
       .on('broadcast', { event: 'activate-buzzer' }, () => {
         setIsBuzzerActive(true);
         setHasHit(false);
       })
+      // 2. Listen for Postgres Changes (Source of truth, handles late joiners/reconnects)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', table: 'matches', schema: 'public', filter: `id=eq.${match.id}` },
+        (payload) => {
+          const updatedMatch = payload.new as Match;
+          if (updatedMatch.buzzer_active) {
+            setIsBuzzerActive(true);
+            setHasHit(false);
+          } else {
+            setIsBuzzerActive(false);
+          }
+        }
+      )
       .subscribe();
 
     return () => {
