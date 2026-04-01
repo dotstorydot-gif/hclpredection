@@ -20,62 +20,54 @@ interface Hit {
   registrations: { name: string } | null;
 }
 
-export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
-  const [isBuzzerActive, setIsBuzzerActive] = useState(false);
+export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, onBack }) => {
+  const [localMatch, setLocalMatch] = useState<Match | null>(initialMatch);
+  const [isBuzzerActive, setIsBuzzerActive] = useState(initialMatch?.buzzer_active || false);
   const [hasHit, setHasHit] = useState(false);
   const [standings, setStandings] = useState<Hit[]>([]);
 
   const fetchStandings = React.useCallback(async () => {
-    if (!match) return;
+    if (!localMatch) return;
     const { data } = await supabase
       .from('buzzer_hits')
       .select('*, registrations(name)')
-      .eq('match_id', match.id)
+      .eq('match_id', localMatch.id)
       .eq('venue_id', registration.venue_id)
       .order('hit_time', { ascending: true })
       .limit(5);
     setStandings(data || []);
-  }, [match, registration.venue_id]);
+  }, [localMatch, registration.venue_id]);
 
-  // Sync local buzzer state with match prop on mount/change
+  // Sync local buzzer state and scores
   useEffect(() => {
-    if (match?.buzzer_active) {
-      setIsBuzzerActive(true);
-    } else {
-      setIsBuzzerActive(false);
-    }
-    // Also reset hit status if the score changes (new round)
+    if (!localMatch) return;
+    setIsBuzzerActive(!!localMatch.buzzer_active);
     setHasHit(false);
-  }, [match?.id, match?.buzzer_active, match?.home_score, match?.away_score]);
+  }, [localMatch]);
 
   useEffect(() => {
-    if (!match) return;
+    if (!initialMatch) return;
 
     // 1. Listen for Broadcast (Ultra-fast, ephemeral)
-    const channel = supabase.channel(`match-${match.id}`)
+    const channel = supabase.channel(`match-${initialMatch.id}`)
       .on('broadcast', { event: 'activate-buzzer' }, () => {
         setIsBuzzerActive(true);
         setHasHit(false);
         setStandings([]);
       })
-      // 2. Listen for Postgres Changes on Match (Buzzer toggle)
+      // 2. Listen for Postgres Changes on Match (Scores, Status, Buzzer)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', table: 'matches', schema: 'public', filter: `id=eq.${match.id}` },
+        { event: 'UPDATE', table: 'matches', schema: 'public', filter: `id=eq.${initialMatch.id}` },
         (payload) => {
-          const updatedMatch = payload.new as Match;
-          if (updatedMatch.buzzer_active) {
-            setIsBuzzerActive(true);
-            if (!isBuzzerActive) setHasHit(false);
-          } else {
-            setIsBuzzerActive(false);
-          }
+          const updated = payload.new as Match;
+          setLocalMatch(updated);
         }
       )
-      // 3. Listen for Postgres Changes on Hits (Standalone standings update)
+      // 3. Listen for Postgres Changes on Hits (Standings update)
       .on(
         'postgres_changes',
-        { event: 'INSERT', table: 'buzzer_hits', schema: 'public', filter: `match_id=eq.${match.id}` },
+        { event: 'INSERT', table: 'buzzer_hits', schema: 'public', filter: `match_id=eq.${initialMatch.id}` },
         () => {
           fetchStandings();
         }
@@ -85,26 +77,23 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [match, registration.venue_id, isBuzzerActive, fetchStandings]);
+  }, [initialMatch?.id, fetchStandings]);
 
-  // Handle initial fetch separately to avoid cascading render lint
+  // Initial fetch for standings
   useEffect(() => {
-    const loadStandings = async () => {
-      if (isBuzzerActive) {
-        await fetchStandings();
-      }
-    };
-    loadStandings();
+    if (isBuzzerActive) {
+      fetchStandings();
+    }
   }, [isBuzzerActive, fetchStandings]);
 
   const handleBuzzerHit = async () => {
-    if (!isBuzzerActive || hasHit || !match) return;
+    if (!isBuzzerActive || hasHit || !localMatch) return;
 
     const hitTime = Date.now();
     try {
       const { error: insertError } = await supabase.from('buzzer_hits').insert({
         registration_id: registration.id,
-        match_id: match.id,
+        match_id: localMatch.id,
         hit_time: new Date(hitTime).toISOString(),
         venue_id: registration.venue_id
       });
@@ -123,7 +112,7 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
     }
   };
 
-  if (!match) {
+  if (!localMatch) {
     return (
       <div className="container" style={{ textAlign: 'center', marginTop: '10vh' }}>
         <p>No match selected for live tracking.</p>
@@ -137,22 +126,22 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
       <div className="glass-card" style={{ padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '0', borderRadius: '24px' }}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-            <img src={match.home_logo || ''} width="60" alt="" />
+            <img src={localMatch.home_logo || ''} width="60" alt="" />
             <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--ucl-silver)', opacity: 0.5 }}>VS</span>
-            <img src={match.away_logo || ''} width="60" alt="" />
+            <img src={localMatch.away_logo || ''} width="60" alt="" />
           </div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem', color: 'white' }}>
-            {match.home_team} vs {match.away_team}
+            {localMatch.home_team} vs {localMatch.away_team}
           </h2>
           
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2.5rem', margin: '2rem 0', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontSize: '3.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{match.home_score || 0}</span>
+              <span style={{ fontSize: '3.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{localMatch.home_score || 0}</span>
               <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.4, marginTop: '0.5rem', letterSpacing: '1px' }}>HOME</span>
             </div>
             <div style={{ fontSize: '1.5rem', fontWeight: 900, opacity: 0.2, color: 'var(--ucl-gold)' }}>:</div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontSize: '3.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{match.away_score || 0}</span>
+              <span style={{ fontSize: '3.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{localMatch.away_score || 0}</span>
               <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.4, marginTop: '0.5rem', letterSpacing: '1px' }}>AWAY</span>
             </div>
           </div>
@@ -160,20 +149,20 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
           <div style={{ 
             display: 'inline-block', 
             padding: '0.4rem 1.2rem', 
-            background: match.status === 'LIVE' ? 'rgba(255,0,0,0.2)' : 'rgba(197, 160, 89, 0.15)', 
-            color: match.status === 'LIVE' ? 'red' : 'var(--ucl-gold)', 
+            background: localMatch.status === 'LIVE' ? 'rgba(255,0,0,0.2)' : 'rgba(197, 160, 89, 0.15)', 
+            color: localMatch.status === 'LIVE' ? 'red' : 'var(--ucl-gold)', 
             borderRadius: '20px', 
             fontSize: '0.7rem', 
             fontWeight: 900, 
             letterSpacing: '1px',
-            border: `1px solid ${match.status === 'LIVE' ? 'rgba(255,0,0,0.2)' : 'rgba(197, 160, 89, 0.3)'}`
+            border: `1px solid ${localMatch.status === 'LIVE' ? 'rgba(255,0,0,0.2)' : 'rgba(197, 160, 89, 0.3)'}`
           }}>
-            {match.status === 'LIVE' ? 'LIVE NOW' : match.status === 'FINISHED' ? 'MATCH FINISHED' : 'UPCOMING'}
+            {localMatch.status === 'LIVE' ? 'LIVE NOW' : localMatch.status === 'FINISHED' ? 'MATCH FINISHED' : 'UPCOMING'}
           </div>
         </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '2rem 0' }}>
-          {isBuzzerActive && match.status === 'LIVE' ? (
+          {isBuzzerActive && localMatch.status === 'LIVE' ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
               {!hasHit ? (
                 <>
@@ -207,7 +196,7 @@ export const LiveMatch: React.FC<Props> = ({ registration, match, onBack }) => {
               ) : (
                 <div className="standings-container">
                   <h3 style={{ fontSize: '0.9rem', fontWeight: 900, marginBottom: '1.5rem', textAlign: 'center', letterSpacing: '2px', color: 'var(--ucl-gold)' }}>
-                    {match.status === 'LIVE' ? '⚡ VENUE STANDINGS ⚡' : '🏆 FINAL STANDINGS 🏆'}
+                    {localMatch.status === 'LIVE' ? '⚡ VENUE STANDINGS ⚡' : '🏆 FINAL STANDINGS 🏆'}
                   </h3>
                   <div style={{ width: '100%' }}>
                     {standings.length > 0 ? (
