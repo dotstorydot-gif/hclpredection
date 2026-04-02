@@ -94,9 +94,10 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
       fetchData(); // Refresh to show the new pick
       onPredictionComplete(matchToLive);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Database sync error. Check your signal!';
-      alert(`Prediction Failed: ${msg}`);
+      const err = error as any;
+      const msg = err?.message || err?.details || 'Database sync error. Check your signal!';
       console.error('MatchSelection Error:', error);
+      alert(`Prediction Failed: ${msg}`);
     } finally {
       setLoading(false);
     }
