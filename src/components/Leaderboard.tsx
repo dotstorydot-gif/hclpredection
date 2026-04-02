@@ -22,7 +22,7 @@ interface PredictionRank {
 }
 
 export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
-  const [tab, setTab] = useState<'buzzer' | 'predictions'>('buzzer');
+  const [tab, setTab] = useState<'buzzer' | 'ranking' | 'prediction'>('buzzer');
   const [buzzerWinners, setBuzzerWinners] = useState<BuzzerWinner[]>([]);
   const [predictionRanks, setPredictionRanks] = useState<PredictionRank[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,7 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
           .select('*, registrations(name)')
           .eq('venue_id', registration.venue_id)
           .order('hit_time', { ascending: true })
-          .limit(20);
+          .limit(5);
         
         const winners = (data || []).map(d => ({
           name: (d.registrations as { name: string } | null)?.name || 'Anonymous',
@@ -44,7 +44,7 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
           venue_id: d.venue_id
         }));
         setBuzzerWinners(winners);
-      } else {
+      } else if (tab === 'ranking') {
         const { data, error } = await supabase
           .from('registrations')
           .select('name, stamps_login, stamps_prediction, stamps_buzzer');
@@ -53,9 +53,19 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
           const calculated = (data || []).map(r => ({
             name: r.name,
             points: (r.stamps_login || 0) + (r.stamps_prediction || 0) + (r.stamps_buzzer || 0)
-          })).sort((a,b) => b.points - a.points).slice(0, 20);
+          })).sort((a,b) => b.points - a.points).slice(0, 5);
           
           setPredictionRanks(calculated);
+        }
+      } else if (tab === 'prediction') {
+        const { data, error } = await supabase
+          .from('registrations')
+          .select('name, stamps_prediction')
+          .order('stamps_prediction', { ascending: false })
+          .limit(5);
+        
+        if (!error && data) {
+          setPredictionRanks(data.map(r => ({ name: r.name, points: r.stamps_prediction || 0 })));
         }
       }
     } finally {
@@ -69,20 +79,27 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
 
   return (
     <div className="container" style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(10vh - 20px)' }}>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', width: '100%' }}>
         <button 
           onClick={() => setTab('buzzer')} 
           className={`ucl-button ${tab === 'buzzer' ? '' : 'inactive'}`}
-          style={{ flex: 1, fontSize: '0.7rem', padding: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          style={{ flex: 1, fontSize: '0.6rem', padding: '0.7rem 0.3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}
         >
-          <Zap size={14} /> LIVE BUZZER
+          <Zap size={12} /> LIVE BUZZER
         </button>
         <button 
-          onClick={() => setTab('predictions')} 
-          className={`ucl-button ${tab === 'predictions' ? '' : 'inactive'}`}
-          style={{ flex: 1, fontSize: '0.7rem', padding: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          onClick={() => setTab('ranking')} 
+          className={`ucl-button ${tab === 'ranking' ? '' : 'inactive'}`}
+          style={{ flex: 1, fontSize: '0.6rem', padding: '0.7rem 0.3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}
         >
-          <Target size={14} /> PREDICTIONS
+          <Trophy size={12} /> RANKING
+        </button>
+        <button 
+          onClick={() => setTab('prediction')} 
+          className={`ucl-button ${tab === 'prediction' ? '' : 'inactive'}`}
+          style={{ flex: 1, fontSize: '0.6rem', padding: '0.7rem 0.3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}
+        >
+          <Target size={12} /> PREDICTION
         </button>
       </div>
 
@@ -100,7 +117,7 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
         }}
       >
         <h2 style={{ fontSize: '1.2rem', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '1.5rem', color: 'var(--ucl-gold)', textAlign: 'center', fontWeight: 900 }}>
-          {tab === 'buzzer' ? '⚡️ FASTEST CLICK RANKING ⚡️' : '🏆 GLOBAL STAMP RANKING 🏆'}
+          {tab === 'buzzer' ? '⚡️ FASTEST CLICK RANKING ⚡️' : tab === 'ranking' ? '🏆 GLOBAL STAMP RANKING 🏆' : '🎯 PREDICTION CHAMPIONS 🎯'}
         </h2>
 
         {loading ? (
