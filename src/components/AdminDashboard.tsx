@@ -106,9 +106,10 @@ export const AdminDashboard: React.FC = () => {
       alert(`Match Processed Successfully! Rankings updated.`);
       await fetchMatches();
       await calculateRanks();
-    } catch (err: any) {
-      alert(`Award stamps failed: ${err?.message || 'Check SQL'}`);
-      console.error(err);
+    } catch (err) {
+      const error = err as { message?: string };
+      alert(`Award stamps failed: ${error?.message || 'Check SQL'}`);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -122,7 +123,10 @@ export const AdminDashboard: React.FC = () => {
       alert('Stamps reset to Zero!');
       fetchMatches();
       calculateRanks();
-    } catch (err) { alert('Reset failed. Check SQL.'); } finally { setLoading(false); }
+    } catch (err) { 
+      console.error(err);
+      alert('Reset failed. Check SQL.'); 
+    } finally { setLoading(false); }
   };
 
   useEffect(() => {
@@ -236,6 +240,15 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const [playerSearchQuery, setPlayerSearchQuery] = useState('');
+
+  const filteredPlayers = players.filter(p => {
+    const matchesVenue = selectedVenueFilter === 'ALL' || p.venue_id === selectedVenueFilter;
+    const matchesSearch = p.name.toLowerCase().includes(playerSearchQuery.toLowerCase()) || 
+                          p.phone.includes(playerSearchQuery);
+    return matchesVenue && matchesSearch;
+  });
+
   if (loading) return (
     <div className="container" style={{ textAlign: 'center', marginTop: '10rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem' }}>
       <div className="live-dot" style={{ width: '40px', height: '40px' }}></div>
@@ -309,10 +322,10 @@ export const AdminDashboard: React.FC = () => {
                 <div style={{ height: '1px', flex: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.1), transparent)' }} />
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '2rem' }}>
+              <div className="admin-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
                 {dayMatches.map(match => (
                   <div key={match.id} className={`admin-card ${match.buzzer_active ? 'buzzer-active-pulse' : ''}`}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                       <div>
                         <div className="vs-badge" style={{ 
                           background: match.status === 'LIVE' ? 'rgba(255,43,0,0.2)' : 'rgba(255,255,255,0.05)',
@@ -358,7 +371,7 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+                    <div className="admin-match-teams" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
                       <div style={{ flex: 1, textAlign: 'center' }}>
                         <img src={match.home_logo || ''} alt="" style={{ width: '40px', height: '40px', marginBottom: '0.8rem', opacity: 0.8 }} />
                         <p style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '1rem', textTransform: 'uppercase' }}>{match.home_team}</p>
@@ -417,7 +430,7 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === 'BUZZER' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', alignItems: 'start' }}>
+        <div className="buzzer-feed-container" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', alignItems: 'start' }}>
           <div className="admin-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 900 }}>REAL-TIME BUZZER FEED</h2>
@@ -547,23 +560,39 @@ export const AdminDashboard: React.FC = () => {
       {activeTab === 'PLAYERS' && (
         <div className="admin-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 900 }}>PLAYER COMMAND LIST ({players.filter(p => selectedVenueFilter === 'ALL' || p.venue_id === selectedVenueFilter).length})</h2>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 900, opacity: 0.5 }}>VENUE FILTER:</span>
-              <select 
-                className="ucl-input" 
-                value={selectedVenueFilter}
-                onChange={(e) => setSelectedVenueFilter(e.target.value)}
-                style={{ width: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', cursor: 'pointer' }}
-              >
-                <option value="ALL">ALL VENUES</option>
-                {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-              </select>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 900 }}>PLAYER COMMAND LIST ({filteredPlayers.length})</h2>
+            
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Search Filter */}
+              <div style={{ position: 'relative', width: '250px' }}>
+                <input 
+                  type="text" 
+                  className="ucl-input" 
+                  placeholder="Search name or phone..." 
+                  value={playerSearchQuery}
+                  onChange={(e) => setPlayerSearchQuery(e.target.value)}
+                  style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}
+                />
+              </div>
+
+              {/* Venue Filter */}
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 900, opacity: 0.5 }}>VENUE:</span>
+                <select 
+                  className="ucl-input" 
+                  value={selectedVenueFilter}
+                  onChange={(e) => setSelectedVenueFilter(e.target.value)}
+                  style={{ width: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                >
+                  <option value="ALL">ALL VENUES</option>
+                  {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                </select>
+              </div>
             </div>
           </div>
           
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+          <div style={{ overflowX: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', minWidth: '600px' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)', opacity: 0.4 }}>
                   <th style={{ padding: '1rem' }}>PARTICIPANT</th>
@@ -575,9 +604,7 @@ export const AdminDashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {players
-                  .filter(p => selectedVenueFilter === 'ALL' || p.venue_id === selectedVenueFilter)
-                  .map(p => (
+                {filteredPlayers.map(p => (
                     <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                       <td style={{ padding: '1rem' }}>
                         <div style={{ fontWeight: 800 }}>{p.name}</div>
@@ -596,6 +623,11 @@ export const AdminDashboard: React.FC = () => {
                 ))}
               </tbody>
             </table>
+            {filteredPlayers.length === 0 && (
+              <div style={{ padding: '4rem', textAlign: 'center', opacity: 0.5 }}>
+                No players found matching your criteria.
+              </div>
+            )}
           </div>
         </div>
       )}

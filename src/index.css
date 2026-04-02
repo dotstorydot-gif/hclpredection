@@ -309,3 +309,122 @@ body {
 }
 
 
+.buzzer-3d {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  background: radial-gradient(circle at 35% 35%, #00a84d, #004d1e 80%);
+  box-shadow: 
+    0 12px 0 #002d12, 
+    0 20px 30px rgba(0, 0, 0, 0.6),
+    inset 0 6px 12px rgba(255, 255, 255, 0.3),
+    inset 0 -10px 20px rgba(0, 0, 0, 0.5);
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  outline: none;
+  text-shadow: 0 4px 6px rgba(0,0,0,0.5);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.buzzer-3d::before {
+  content: '';
+  position: absolute;
+  top: 10%;
+  left: 20%;
+  width: 40%;
+  height: 20%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
+  border-radius: 50% 50% 30% 30% / 80% 80% 20% 20%;
+  pointer-events: none;
+  filter: blur(2px);
+}
+
+.buzzer-3d:active {
+  transform: translateY(8px);
+  box-shadow: 
+    0 4px 0 #002d12,
+    0 8px 15px rgba(0,0,0,0.4),
+    inset 0 4px 6px rgba(255, 255, 255, 0.2),
+    inset 0 -12px 24px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.02); filter: brightness(1.1); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.buzzer-3d.pulsing {
+  animation: pulse-green 1s infinite ease-in-out;
+}
+
+/* Responsive Admin Dashboard */
+@media (max-width: 768px) {
+  .ucl-title {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+  }
+
+  header {
+    padding: 1.5rem 0 !important;
+  }
+
+  nav {
+    flex-wrap: wrap;
+    gap: 0.2rem !important;
+    padding: 0.4rem !important;
+  }
+
+  nav button {
+    font-size: 0.65rem !important;
+    padding: 0.6rem 0.2rem !important;
+    min-width: calc(50% - 0.2rem);
+  }
+
+  .admin-card {
+    padding: 1.2rem !important;
+  }
+
+  .admin-card h2 {
+    font-size: 1rem !important;
+  }
+
+  /* Match cards in admin */
+  .admin-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  /* Team logos and scores in admin */
+  .admin-match-teams {
+    gap: 0.5rem !important;
+  }
+
+  .admin-match-teams img {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  /* Tables in admin */
+  table {
+    font-size: 0.7rem !important;
+  }
+
+  th, td {
+    padding: 0.6rem 0.4rem !important;
+  }
+
+  /* Leaderboard in admin */
+  .buzzer-feed-container {
+    grid-template-columns: 1fr !important;
+  }
+}

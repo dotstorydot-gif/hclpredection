@@ -101,7 +101,7 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
       supabase.removeChannel(channel);
       clearInterval(pollInterval);
     };
-  }, [initialMatch?.id, fetchStandings]);
+  }, [initialMatch, fetchStandings]);
 
   // Initial fetch for standings
   useEffect(() => {
@@ -206,23 +206,8 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
                 <>
                   <button
                     onClick={handleBuzzerHit}
-                    className="ucl-button"
-                    style={{
-                      width: '180px',
-                      height: '180px',
-                      borderRadius: '50%',
-                      fontSize: '1.6rem',
-                      background: 'radial-gradient(circle, #008232, #004d1e)',
-                      boxShadow: '0 0 60px rgba(0, 130, 50, 0.6)',
-                      animation: 'pulse-green 1s infinite',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      border: '8px solid rgba(255,255,255,0.1)',
-                      fontWeight: 900
-                    }}
+                    className="buzzer-3d pulsing"
+                    style={{ zIndex: 100 }}
                   >
                     GOAL! HIT!
                     <Trophy size={32} style={{ marginTop: '0.5rem' }} />
