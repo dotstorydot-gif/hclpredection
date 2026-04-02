@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 import { Registration } from './components/Registration';
 import { MatchSelection } from './components/MatchSelection';
 import { LiveMatch } from './components/LiveMatch';
@@ -14,11 +15,51 @@ function App() {
     const saved = localStorage.getItem('ucl_registration');
     return saved ? JSON.parse(saved) : null;
   });
+
   const [isAdmin] = useState(() => 
     window.location.hash === '#admin' || window.location.pathname === '/admin'
   );
-  const [view, setView] = useState<'selection' | 'live' | 'leaderboard'>('selection');
-  const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
+
+  const [view, setViewState] = useState<'selection' | 'live' | 'leaderboard'>(() => {
+    const savedView = localStorage.getItem('ucl_view');
+    if (savedView === 'selection' || savedView === 'live' || savedView === 'leaderboard') {
+      return savedView;
+    }
+    return 'selection';
+  });
+
+  const setView = (v: 'selection' | 'live' | 'leaderboard') => {
+    setViewState(v);
+    localStorage.setItem('ucl_view', v);
+  };
+
+  const [currentMatch, setCurrentMatchState] = useState<Match | null>(() => {
+    const saved = localStorage.getItem('ucl_current_match');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const setCurrentMatch = (m: Match | null) => {
+    setCurrentMatchState(m);
+    if (m) {
+      localStorage.setItem('ucl_current_match', JSON.stringify(m));
+    } else {
+      localStorage.removeItem('ucl_current_match');
+    }
+  };
+
+  // Sync current match on load to get latest score/status
+  useEffect(() => {
+    if (currentMatch?.id) {
+      supabase
+        .from('matches')
+        .select('*')
+        .eq('id', currentMatch.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setCurrentMatch(data);
+        });
+    }
+  }, [currentMatch?.id]); // Sync when match ID matches or on load
 
   const handleRegistrationComplete = (data: RegistrationType) => {
     setRegistration(data);
@@ -27,7 +68,11 @@ function App() {
 
   const resetRegistration = () => {
     localStorage.removeItem('ucl_registration');
+    localStorage.removeItem('ucl_view');
+    localStorage.removeItem('ucl_current_match');
     setRegistration(null);
+    setView('selection');
+    setCurrentMatch(null);
   };
 
   if (isAdmin) {
