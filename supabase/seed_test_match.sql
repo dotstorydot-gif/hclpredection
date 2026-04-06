@@ -12,6 +12,6 @@ VALUES (
   'Real Madrid', 
   'https://img.uefa.com/imgml/TP/teams/logos/70x70/7889.png', 
   'https://img.uefa.com/imgml/TP/teams/logos/70x70/50051.png', 
-  '2026-04-02T21:00:00Z', 
+  '2026-04-06T21:00:00Z', 
   'UPCOMING'
 );
