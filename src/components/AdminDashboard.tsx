@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/database';
-import { Zap, Play, CheckCircle, Trophy, Layout, Square, RotateCw } from 'lucide-react';
+import { Zap, Play, CheckCircle, Trophy, Layout, Square, RotateCw, RefreshCw } from 'lucide-react';
 
 type Match = Database['public']['Tables']['matches']['Row'];
 
@@ -39,6 +39,7 @@ export const AdminDashboard: React.FC = () => {
   const [ranks, setRanks] = useState<Rank[]>([]);
   const [venues, setVenues] = useState<Database['public']['Tables']['venues']['Row'][]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const fetchMatches = useCallback(async () => {
     const { data } = await supabase
@@ -112,6 +113,22 @@ export const AdminDashboard: React.FC = () => {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    try {
+      // Trigger both edge functions
+      await fetch('/functions/v1/sync-ucl-fixtures', { method: 'POST' });
+      await fetch('/functions/v1/update-live-scores', { method: 'POST' });
+      await fetchMatches();
+      alert('System synchronization triggered successfully.');
+    } catch (err) {
+      console.error(err);
+      alert('Sync failed. Check Supabase Edge Function logs.');
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -260,10 +277,31 @@ export const AdminDashboard: React.FC = () => {
     <div className="container" style={{ maxWidth: '1200px', width: '95%', margin: '0 auto', paddingBottom: '4rem' }}>
       <header style={{ padding: '3rem 0', textAlign: 'center' }}>
         <h1 className="ucl-title" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', letterSpacing: '2px' }}>COMMAND CENTER</h1>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', alignItems: 'center', opacity: 0.6 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', alignItems: 'center', opacity: 0.6 }}>
           <div className="live-indicator"><div className="live-dot" /> SYSTEM ONLINE</div>
           <span>•</span>
           <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>{matches.filter(m => m.status === 'LIVE').length} ACTIVE MATCHES</span>
+          <span>•</span>
+          <button 
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            style={{ 
+              background: 'rgba(0, 130, 50, 0.2)', 
+              border: '1px solid var(--ucl-navy)', 
+              color: 'var(--ucl-navy)',
+              fontSize: '0.65rem',
+              padding: '0.4rem 0.8rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontWeight: 900
+            }}
+          >
+            <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
+            {isSyncing ? 'SYNCING...' : 'SYNC NOW'}
+          </button>
         </div>
       </header>
       
@@ -344,12 +382,26 @@ export const AdminDashboard: React.FC = () => {
                           {match.status === 'LIVE' && <div className="live-dot" style={{ width: '6px', height: '6px' }} />}
                           {match.status}
                         </div>
+                        {match.api_id && (
+                          <div style={{ fontSize: '0.55rem', background: 'rgba(0, 130, 50, 0.1)', color: 'var(--ucl-navy)', display: 'inline-flex', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 900, marginBottom: '0.5rem', marginLeft: '0.5rem' }}>
+                            AUTOMATED (ID: {match.api_id})
+                          </div>
+                        )}
                         {match.processed && (
                           <div style={{ fontSize: '0.6rem', color: 'var(--ucl-gold)', fontWeight: 900, marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                             <CheckCircle size={10} /> STAMP AWARDED
                           </div>
                         )}
-                        <p style={{ fontSize: '0.65rem', opacity: 0.4, fontWeight: 700 }}>{new Date(match.kickoff_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.5rem' }}>
+                          <p style={{ fontSize: '0.65rem', opacity: 0.4, fontWeight: 700 }}>
+                            Kickoff: {new Date(match.kickoff_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                          {match.last_sync_at && (
+                            <p style={{ fontSize: '0.55rem', opacity: 0.3, fontStyle: 'italic' }}>
+                              Last Sync: {new Date(match.last_sync_at).toLocaleTimeString()}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       
                       <div style={{ display: 'flex', gap: '0.5rem' }}>

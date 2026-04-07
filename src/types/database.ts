@@ -87,6 +87,8 @@ export type Database = {
           buzzer_active: boolean
           processed: boolean
           created_at: string
+          api_id: string | null
+          last_sync_at: string | null
         }
         Insert: {
           id?: string
@@ -101,6 +103,8 @@ export type Database = {
           buzzer_active?: boolean
           processed?: boolean
           created_at?: string
+          api_id?: string | null
+          last_sync_at?: string | null
         }
         Update: {
           id?: string
@@ -115,6 +119,8 @@ export type Database = {
           buzzer_active?: boolean
           processed?: boolean
           created_at?: string
+          api_id?: string | null
+          last_sync_at?: string | null
         }
         Relationships: []
       }
