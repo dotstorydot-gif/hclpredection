@@ -121,9 +121,10 @@ export const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       await supabase.rpc('reset_all_player_points', {});
-      alert('Stamps reset to Zero!');
-      fetchMatches();
-      calculateRanks();
+      alert('Global Reset Successful!');
+      await fetchMatches();
+      await fetchPlayers();
+      await calculateRanks();
     } catch (err) { 
       console.error(err);
       alert('Reset failed. Check SQL.'); 
@@ -238,9 +239,10 @@ export const AdminDashboard: React.FC = () => {
       if (error) throw error;
       
       alert('Data wiped successfully!');
-      fetchMatches();
-      fetchBuzzerHits();
-      calculateRanks();
+      await fetchMatches();
+      await fetchPlayers();
+      await fetchBuzzerHits();
+      await calculateRanks();
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Wipe failed. Ensure you ran the SQL policies first.');
     } finally {
@@ -653,6 +655,32 @@ export const AdminDashboard: React.FC = () => {
                 No players found matching your criteria.
               </div>
             )}
+          </div>
+
+          {/* DANGER ZONE */}
+          <div style={{ marginTop: '3rem', padding: '2rem', border: '1px dashed rgba(255,43,0,0.3)', borderRadius: '16px', background: 'rgba(255,43,0,0.02)' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--ucl-electric)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>☢️ DANGER ZONE</h3>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <button 
+                className="ucl-button" 
+                onClick={resetEverything}
+                disabled={loading}
+                style={{ background: 'none', border: '1px solid var(--ucl-electric)', color: 'var(--ucl-electric)', fontSize: '0.7rem' }}
+              >
+                {loading ? 'PROCESSING...' : 'RESET ALL SCORES & STAMPS'}
+              </button>
+              <button 
+                className="ucl-button" 
+                onClick={wipeAllData}
+                disabled={loading}
+                style={{ background: 'var(--ucl-electric)', fontSize: '0.7rem' }}
+              >
+                {loading ? 'PROCESSING...' : 'PERMANENT WIPE (DELETE ALL PLAYERS)'}
+              </button>
+            </div>
+            <p style={{ fontSize: '0.65rem', opacity: 0.4, marginTop: '1rem' }}>
+              These actions cannot be undone. "Reset" zeros out scores but keeps participants. "Wipe" deletes everyone.
+            </p>
           </div>
         </div>
       )}

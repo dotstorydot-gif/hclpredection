@@ -58,8 +58,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION reset_all_player_points()
 RETURNS VOID AS $$
 BEGIN
-  UPDATE public.registrations SET stamps_login = 1, stamps_prediction = 0, stamps_buzzer = 0;
-  UPDATE public.matches SET processed = false;
+  -- 1. Reset all player stamps and points
+  UPDATE public.registrations SET stamps_login = 1, stamps_prediction = 0, stamps_buzzer = 0, points = 0;
+  
+  -- 2. Reset match scores and statuses
+  UPDATE public.matches SET processed = false, home_score = 0, away_score = 0, status = 'UPCOMING', buzzer_active = false;
+  
+  -- 3. Delete all history
+  DELETE FROM public.predictions;
   DELETE FROM public.buzzer_hits;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
