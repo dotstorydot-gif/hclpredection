@@ -57,6 +57,21 @@ body::before {
   }
 }
 
+@media (max-width: 900px) and (orientation: landscape) {
+  body::before {
+    background: linear-gradient(rgba(0, 58, 24, 0.4), rgba(0, 58, 24, 0.4)), url('/Screen-01.png') no-repeat center center;
+    background-size: cover;
+  }
+  
+  .admin-header {
+    padding: 3rem 0 1rem 0 !important;
+  }
+  
+  .main-content {
+    padding-top: 4rem !important;
+  }
+}
+
 .main-content.registration-layout {
   padding-top: calc(11rem + 2vh); /* Push card down further on registration to clear watermark */
 }
