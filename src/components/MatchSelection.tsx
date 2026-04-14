@@ -9,10 +9,10 @@ type Prediction = Database['public']['Tables']['predictions']['Row'];
 
 interface Props {
   registration: Registration;
-  onPredictionComplete: (match: Match) => void;
+  onGoToLive: () => void;
 }
 
-export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComplete }) => {
+export const MatchSelection: React.FC<Props> = ({ registration, onGoToLive }) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,12 +87,11 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
         throw error;
       }
       
-      const matchToLive = selectedMatch;
       setIsConfirming(false);
       setSelectedMatch(null);
       setChoice(null);
       fetchData(); // Refresh to show the new pick
-      onPredictionComplete(matchToLive);
+      // Do not auto navigate to LIVE, let the user pick others.
     } catch (error) {
       const err = error as any;
       const msg = err?.message || err?.details || 'Database sync error. Check your signal!';
@@ -371,6 +370,24 @@ export const MatchSelection: React.FC<Props> = ({ registration, onPredictionComp
           <div style={{ textAlign: 'center', padding: '3rem', opacity: 0.5 }}>
             <p style={{ fontSize: '1rem', letterSpacing: '1px' }}>NO MATCHES SCHEDULED</p>
           </div>
+        )}
+        
+        {predictions.length > 0 && selectedDate && groupedMatches[selectedDate] && (
+          <button 
+            className="ucl-button" 
+            onClick={onGoToLive}
+            style={{ 
+              marginTop: '2rem', 
+              width: '100%', 
+              padding: '1.2rem', 
+              fontSize: '1rem', 
+              background: 'var(--ucl-gold)', 
+              color: 'black',
+              fontWeight: 900
+            }}
+          >
+            GO TO LIVE VIEW &larr;
+          </button>
         )}
       </div>
     </div>

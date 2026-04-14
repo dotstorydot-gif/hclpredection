@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase';
+import { useState } from 'react';
 import { Registration } from './components/Registration';
 import { MatchSelection } from './components/MatchSelection';
 import { LiveMatch } from './components/LiveMatch';
@@ -8,7 +7,6 @@ import { Leaderboard } from './components/Leaderboard';
 import type { Database } from './types/database';
 
 type RegistrationType = Database['public']['Tables']['registrations']['Row'];
-type Match = Database['public']['Tables']['matches']['Row'];
 
 function App() {
   const [registration, setRegistration] = useState<RegistrationType | null>(() => {
@@ -33,34 +31,6 @@ function App() {
     localStorage.setItem('ucl_view', v);
   };
 
-  const [currentMatch, setCurrentMatchState] = useState<Match | null>(() => {
-    const saved = localStorage.getItem('ucl_current_match');
-    return saved ? JSON.parse(saved) : null;
-  });
-
-  const setCurrentMatch = (m: Match | null) => {
-    setCurrentMatchState(m);
-    if (m) {
-      localStorage.setItem('ucl_current_match', JSON.stringify(m));
-    } else {
-      localStorage.removeItem('ucl_current_match');
-    }
-  };
-
-  // Sync current match on load to get latest score/status
-  useEffect(() => {
-    if (currentMatch?.id) {
-      supabase
-        .from('matches')
-        .select('*')
-        .eq('id', currentMatch.id)
-        .single()
-        .then(({ data }) => {
-          if (data) setCurrentMatch(data);
-        });
-    }
-  }, [currentMatch?.id]); // Sync when match ID matches or on load
-
   const handleRegistrationComplete = (data: RegistrationType) => {
     setRegistration(data);
     localStorage.setItem('ucl_registration', JSON.stringify(data));
@@ -69,10 +39,8 @@ function App() {
   const resetRegistration = () => {
     localStorage.removeItem('ucl_registration');
     localStorage.removeItem('ucl_view');
-    localStorage.removeItem('ucl_current_match');
     setRegistration(null);
     setView('selection');
-    setCurrentMatch(null);
   };
 
   if (isAdmin) {
@@ -149,15 +117,13 @@ function App() {
           view === 'selection' ? (
             <MatchSelection 
               registration={registration} 
-              onPredictionComplete={(match) => {
-                setCurrentMatch(match);
+              onGoToLive={() => {
                 setView('live');
               }} 
             />
           ) : view === 'live' ? (
             <LiveMatch 
               registration={registration} 
-              match={currentMatch} 
               onBack={() => setView('selection')} 
             />
           ) : (

@@ -1,8 +1,7 @@
--- Seed v2: Venues and Interactive Matches
-INSERT INTO public.venues (name) VALUES 
-  ('The Villa Hub');
+-- Clear existing matches to avoid duplicates
+DELETE FROM public.matches;
 
--- Seed v2: Upcoming and Live Matches with Logos
+-- Insert new requested matches
 INSERT INTO public.matches (home_team, away_team, home_logo, away_logo, kickoff_time, status)
 VALUES 
   (
@@ -21,5 +20,3 @@ VALUES
     '2026-04-14T19:00:00Z', 
     'UPCOMING'
   );
-
--- Note: Admin can update scores and trigger buzzers via the /#admin view

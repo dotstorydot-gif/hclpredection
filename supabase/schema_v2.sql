@@ -93,4 +93,5 @@ CREATE TRIGGER update_predictions_updated_at BEFORE UPDATE ON public.predictions
 FOR EACH ROW EXECUTE PROCEDURE public.update_updated_at_column();
 
 -- Seed initial venues
-INSERT INTO public.venues (name) VALUES ('Camp Nou Cafe'), ('Anfield Pub'), ('Bernabéu Lounge'), ('The Arena');
+INSERT INTO public.venues (name) VALUES 
+  ('The Villa Hub');

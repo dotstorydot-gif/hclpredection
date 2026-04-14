@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/database';
-import { Trophy, Clock, ArrowLeft } from 'lucide-react';
+import { Trophy, Clock, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type Registration = Database['public']['Tables']['registrations']['Row'];
 type Match = Database['public']['Tables']['matches']['Row'];
 
 interface Props {
   registration: Registration;
-  match: Match | null;
   onBack: () => void;
 }
 
@@ -20,14 +19,16 @@ interface Hit {
   registrations: { name: string } | null;
 }
 
-export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, onBack }) => {
-  const [localMatch, setLocalMatch] = useState<Match | null>(initialMatch);
-  const [isBuzzerActive, setIsBuzzerActive] = useState(initialMatch?.buzzer_active || false);
+// Sub-component to manage the specific live match view to isolate the realtime logic per match
+const SingleLiveMatch: React.FC<{ registration: Registration; initialMatch: Match; isActiveView: boolean }> = ({ registration, initialMatch, isActiveView }) => {
+  const [localMatch, setLocalMatch] = useState<Match>(initialMatch);
+  const [isBuzzerActive, setIsBuzzerActive] = useState(initialMatch.buzzer_active || false);
   const [hasHit, setHasHit] = useState(false);
   const [standings, setStandings] = useState<Hit[]>([]);
+  const [lastScore, setLastScore] = useState((initialMatch.home_score || 0) + (initialMatch.away_score || 0));
+  const [isHitting, setIsHitting] = useState(false);
 
   const fetchStandings = React.useCallback(async () => {
-    if (!localMatch) return;
     const goalNumber = (localMatch.home_score || 0) + (localMatch.away_score || 0);
     
     const { data } = await supabase
@@ -41,41 +42,30 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
     setStandings(data || []);
   }, [localMatch, registration.venue_id]);
 
-  const [lastScore, setLastScore] = useState((initialMatch?.home_score || 0) + (initialMatch?.away_score || 0));
-
-  // Sync local buzzer state and scores
   useEffect(() => {
-    if (!localMatch) return;
-    
     const currentScore = (localMatch.home_score || 0) + (localMatch.away_score || 0);
     const buzzerTransitionedOn = !isBuzzerActive && localMatch.buzzer_active;
 
-    // Only reset the "hit" status if a score happened OR the buzzer was just turned ON
     if (currentScore > lastScore || buzzerTransitionedOn) {
       setHasHit(false);
       setLastScore(currentScore);
     }
-
     setIsBuzzerActive(!!localMatch.buzzer_active);
   }, [localMatch, isBuzzerActive, lastScore]);
 
   useEffect(() => {
-    if (!initialMatch) return;
-
     const fetchLatestMatch = async () => {
       const { data } = await supabase.from('matches').select('*').eq('id', initialMatch.id).single();
       if (data) setLocalMatch(data);
     };
 
-    // 1. Listen for Broadcast (Ultra-fast, ephemeral)
     const channel = supabase.channel(`match-${initialMatch.id}`)
       .on('broadcast', { event: 'activate-buzzer' }, () => {
         setIsBuzzerActive(true);
         setHasHit(false);
         setStandings([]);
-        fetchLatestMatch(); // Sync state on broadcast
+        fetchLatestMatch();
       })
-      // 2. Listen for Postgres Changes on Match (Scores, Status, Buzzer)
       .on(
         'postgres_changes',
         { event: 'UPDATE', table: 'matches', schema: 'public', filter: `id=eq.${initialMatch.id}` },
@@ -84,7 +74,6 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
           setLocalMatch(updated);
         }
       )
-      // 3. Listen for Postgres Changes on Hits (Standings update)
       .on(
         'postgres_changes',
         { event: 'INSERT', table: 'buzzer_hits', schema: 'public', filter: `match_id=eq.${initialMatch.id}` },
@@ -94,28 +83,23 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
       )
       .subscribe();
 
-    // 4. Polling Fallback: re-fetch every 5s for mobile devices that might lose WS
     const pollInterval = setInterval(fetchLatestMatch, 5000);
 
     return () => {
       supabase.removeChannel(channel);
       clearInterval(pollInterval);
     };
-  }, [initialMatch, fetchStandings]);
+  }, [initialMatch.id, fetchStandings]);
 
-  // Initial fetch for standings
   useEffect(() => {
     if (isBuzzerActive) {
       fetchStandings();
     }
   }, [isBuzzerActive, fetchStandings]);
 
-  const [isHitting, setIsHitting] = useState(false);
-
   const handleBuzzerHit = async () => {
-    if (!isBuzzerActive || hasHit || !localMatch || isHitting) return;
+    if (!isBuzzerActive || hasHit || isHitting) return;
 
-    // Optimistic UI: Hide buzzer instantly on click
     setHasHit(true);
     setIsHitting(true);
     
@@ -131,140 +115,193 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
       });
       
       if (insertError) {
-        // Rollback on error
         setHasHit(false);
         setIsHitting(false);
         alert('Could not record hit. Please check your signal!');
-        console.error('Insert error:', insertError);
         return;
       }
-
       fetchStandings();
     } catch (e) {
       setHasHit(false);
       setIsHitting(false);
       alert('Internal game error. Please try again.');
-      console.error('Buzzer hit exception:', e);
     } finally {
       setIsHitting(false);
     }
   };
 
-  if (!localMatch) {
+  return (
+    <div className="glass-card" style={{ padding: '2rem 1.5rem', display: isActiveView ? 'flex' : 'none', flexDirection: 'column', justifyContent: 'center', minHeight: '0', borderRadius: '24px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
+          <img src={localMatch.home_logo || ''} width="60" alt="" />
+          <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--ucl-silver)', opacity: 0.5 }}>VS</span>
+          <img src={localMatch.away_logo || ''} width="60" alt="" />
+        </div>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem', color: 'white' }}>
+          {localMatch.home_team} vs {localMatch.away_team}
+        </h2>
+        
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2.5rem', margin: '2rem 0', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: '3.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{localMatch.home_score || 0}</span>
+            <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.4, marginTop: '0.5rem', letterSpacing: '1px' }}>HOME</span>
+          </div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 900, opacity: 0.2, color: 'var(--ucl-gold)' }}>:</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: '3.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{localMatch.away_score || 0}</span>
+            <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.4, marginTop: '0.5rem', letterSpacing: '1px' }}>AWAY</span>
+          </div>
+        </div>
+
+        <div style={{ 
+          display: 'inline-block', 
+          padding: '0.4rem 1.2rem', 
+          background: localMatch.status === 'LIVE' ? 'rgba(255,0,0,0.2)' : 'rgba(197, 160, 89, 0.15)', 
+          color: localMatch.status === 'LIVE' ? 'red' : 'var(--ucl-gold)', 
+          borderRadius: '20px', 
+          fontSize: '0.7rem', 
+          fontWeight: 900, 
+          letterSpacing: '1px',
+          border: `1px solid ${localMatch.status === 'LIVE' ? 'rgba(255,0,0,0.2)' : 'rgba(197, 160, 89, 0.3)'}`
+        }}>
+          {localMatch.status === 'LIVE' ? 'LIVE NOW' : localMatch.status === 'FINISHED' ? 'MATCH FINISHED' : 'UPCOMING'}
+        </div>
+      </div>
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '2rem 0', minHeight: '200px' }}>
+        {isBuzzerActive && localMatch.status === 'LIVE' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
+            {!hasHit ? (
+              <>
+                <button
+                  onClick={handleBuzzerHit}
+                  className="buzzer-3d pulsing"
+                  style={{ zIndex: 100 }}
+                >
+                  GOAL! HIT!
+                  <Trophy size={32} style={{ marginTop: '0.5rem' }} />
+                </button>
+                <p style={{ color: 'var(--ucl-gold)', fontWeight: 900, fontSize: '0.8rem', textAlign: 'center', letterSpacing: '1px' }}>
+                  BE THE FASTEST AT YOUR VENUE!
+                </p>
+              </>
+            ) : (
+              <div className="standings-container">
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 900, marginBottom: '1.5rem', textAlign: 'center', letterSpacing: '2px', color: 'var(--ucl-gold)' }}>
+                  {localMatch.status === 'LIVE' ? '⚡ VENUE STANDINGS ⚡' : '🏆 FINAL STANDINGS 🏆'}
+                </h3>
+                <div style={{ width: '100%' }}>
+                  {standings.length > 0 ? (
+                    standings.map((h, i) => (
+                      <div key={h.id} className={`standings-row ${i === 0 ? 'winner' : ''} ${h.registration_id === registration.id ? 'user' : ''}`}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                          <span className={`rank-badge ${i === 0 ? 'top' : ''}`}>#{i + 1}</span>
+                          <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>
+                            {h.registrations?.name === registration.name ? 'YOU' : h.registrations?.name || 'Anonymous'}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>
+                          {new Date(h.hit_time).toLocaleTimeString([], { second: '2-digit', ...({ fractionalSecondDigits: 3 } as object) })}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                      <p style={{ textAlign: 'center', opacity: 0.5, fontSize: '0.8rem' }}>Updating standings...</p>
+                  )}
+                </div>
+                {standings.length > 0 && standings[0].registration_id === registration.id && (
+                    <p style={{ textAlign: 'center', color: 'var(--ucl-gold)', fontSize: '0.7rem', fontWeight: 900, marginTop: '1rem', animation: 'pulse 1s infinite' }}>
+                      👑 CURRENT LEADER!
+                    </p>
+                )}
+              </div>
+            )
+            }
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', opacity: 0.9 }}>
+            <Clock size={50} style={{ color: 'var(--ucl-gold)', marginBottom: '1rem', animation: 'pulse 2s infinite' }} />
+            <h3 style={{ fontSize: '1.3rem', marginBottom: '0.6rem', fontWeight: 800 }}>Waiting for Goal...</h3>
+            <p style={{ fontSize: '0.85rem', opacity: 0.6, maxWidth: '260px', margin: '0 auto', lineHeight: '1.4' }}>Stay alert! The buzzer activates instantly when a goal is scored.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const LiveMatch: React.FC<Props> = ({ registration, onBack }) => {
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      // Get all matches for today or just the scheduled ones
+      const { data } = await supabase
+        .from('matches')
+        .select('*')
+        .order('kickoff_time', { ascending: true });
+        
+      setMatches(data || []);
+      setLoading(false);
+    };
+    fetchMatches();
+  }, []);
+
+  if (loading) {
+    return <div className="container" style={{ textAlign: 'center', marginTop: '10vh' }}>Loading matches...</div>;
+  }
+
+  if (matches.length === 0) {
     return (
       <div className="container" style={{ textAlign: 'center', marginTop: '10vh' }}>
-        <p>No match selected for live tracking.</p>
+        <p>No active matches found.</p>
         <button onClick={onBack} className="ucl-button" style={{ marginTop: '1rem' }}>GO TO FIXTURES</button>
       </div>
     );
   }
 
+  const prevMatch = () => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : matches.length - 1));
+  };
+
+  const nextMatch = () => {
+    setCurrentIndex((prev) => (prev < matches.length - 1 ? prev + 1 : 0));
+  };
+
   return (
-    <div className="container" style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(10vh - 20px)', gap: '1rem' }}>
-      <div className="glass-card" style={{ padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '0', borderRadius: '24px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
-            <img src={localMatch.home_logo || ''} width="60" alt="" />
-            <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--ucl-silver)', opacity: 0.5 }}>VS</span>
-            <img src={localMatch.away_logo || ''} width="60" alt="" />
-          </div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem', color: 'white' }}>
-            {localMatch.home_team} vs {localMatch.away_team}
-          </h2>
+    <div className="container" style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(5vh)', gap: '1rem' }}>
+      
+      {/* Swipe/Match Navigation Controls */}
+      {matches.length > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0 1rem', marginBottom: '0.5rem' }}>
+          <button onClick={prevMatch} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }}>
+            <ChevronLeft size={20} />
+          </button>
           
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2.5rem', margin: '2rem 0', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontSize: '3.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{localMatch.home_score || 0}</span>
-              <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.4, marginTop: '0.5rem', letterSpacing: '1px' }}>HOME</span>
-            </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, opacity: 0.2, color: 'var(--ucl-gold)' }}>:</div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ fontSize: '3.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{localMatch.away_score || 0}</span>
-              <span style={{ fontSize: '0.6rem', fontWeight: 800, opacity: 0.4, marginTop: '0.5rem', letterSpacing: '1px' }}>AWAY</span>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 900, color: 'var(--ucl-gold)', letterSpacing: '2px' }}>
+              MATCH {currentIndex + 1} OF {matches.length}
+            </span>
           </div>
 
-          <div style={{ 
-            display: 'inline-block', 
-            padding: '0.4rem 1.2rem', 
-            background: localMatch.status === 'LIVE' ? 'rgba(255,0,0,0.2)' : 'rgba(197, 160, 89, 0.15)', 
-            color: localMatch.status === 'LIVE' ? 'red' : 'var(--ucl-gold)', 
-            borderRadius: '20px', 
-            fontSize: '0.7rem', 
-            fontWeight: 900, 
-            letterSpacing: '1px',
-            border: `1px solid ${localMatch.status === 'LIVE' ? 'rgba(255,0,0,0.2)' : 'rgba(197, 160, 89, 0.3)'}`
-          }}>
-            {localMatch.status === 'LIVE' ? 'LIVE NOW' : localMatch.status === 'FINISHED' ? 'MATCH FINISHED' : 'UPCOMING'}
-          </div>
+          <button onClick={nextMatch} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }}>
+            <ChevronRight size={20} />
+          </button>
         </div>
+      )}
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '2rem 0' }}>
-          {isBuzzerActive && localMatch.status === 'LIVE' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
-              {!hasHit ? (
-                <>
-                  <button
-                    onClick={handleBuzzerHit}
-                    className="buzzer-3d pulsing"
-                    style={{ zIndex: 100 }}
-                  >
-                    GOAL! HIT!
-                    <Trophy size={32} style={{ marginTop: '0.5rem' }} />
-                  </button>
-                  <p style={{ color: 'var(--ucl-gold)', fontWeight: 900, fontSize: '0.8rem', textAlign: 'center', letterSpacing: '1px' }}>
-                    BE THE FASTEST AT YOUR VENUE!
-                  </p>
-                </>
-              ) : (
-                <div className="standings-container">
-                  <h3 style={{ fontSize: '0.9rem', fontWeight: 900, marginBottom: '1.5rem', textAlign: 'center', letterSpacing: '2px', color: 'var(--ucl-gold)' }}>
-                    {localMatch.status === 'LIVE' ? '⚡ VENUE STANDINGS ⚡' : '🏆 FINAL STANDINGS 🏆'}
-                  </h3>
-                  <div style={{ width: '100%' }}>
-                    {standings.length > 0 ? (
-                      standings.map((h, i) => (
-                        <div key={h.id} className={`standings-row ${i === 0 ? 'winner' : ''} ${h.registration_id === registration.id ? 'user' : ''}`}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                            <span className={`rank-badge ${i === 0 ? 'top' : ''}`}>#{i + 1}</span>
-                            <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>
-                              {h.registrations?.name === registration.name ? 'YOU' : h.registrations?.name || 'Anonymous'}
-                            </span>
-                          </div>
-                          <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>
-                            {new Date(h.hit_time).toLocaleTimeString([], { second: '2-digit', ...({ fractionalSecondDigits: 3 } as object) })}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                        <p style={{ textAlign: 'center', opacity: 0.5, fontSize: '0.8rem' }}>Updating standings...</p>
-                    )}
-                  </div>
-                  {standings.length > 0 && standings[0].registration_id === registration.id && (
-                     <p style={{ textAlign: 'center', color: 'var(--ucl-gold)', fontSize: '0.7rem', fontWeight: 900, marginTop: '1rem', animation: 'pulse 1s infinite' }}>
-                        👑 CURRENT LEADER!
-                     </p>
-                  )}
-                </div>
-              )
-              }
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', opacity: 0.9 }}>
-              <Clock size={50} style={{ color: 'var(--ucl-gold)', marginBottom: '1rem', animation: 'pulse 2s infinite' }} />
-              <h3 style={{ fontSize: '1.3rem', marginBottom: '0.6rem', fontWeight: 800 }}>Waiting for Goal...</h3>
-              <p style={{ fontSize: '0.85rem', opacity: 0.6, maxWidth: '260px', margin: '0 auto', lineHeight: '1.4' }}>Stay alert! The buzzer activates instantly when a goal is scored.</p>
-            </div>
-          )}
-        </div>
-
-        <div style={{ marginTop: 'auto', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.7rem', fontWeight: 900, letterSpacing: '1px' }}>
-            <span style={{ opacity: 0.5 }}>PREDICTION STATUS</span>
-            <span style={{ color: 'var(--ucl-gold)' }}>LOCKED & LIVE</span>
-          </div>
-        </div>
-      </div>
+      {/* Render all matches but only show current to maintain websocket connections without re-subscribing */}
+      {matches.map((match, index) => (
+        <SingleLiveMatch 
+          key={match.id} 
+          registration={registration} 
+          initialMatch={match} 
+          isActiveView={index === currentIndex} 
+        />
+      ))}
 
       <button 
         onClick={onBack} 
@@ -281,7 +318,8 @@ export const LiveMatch: React.FC<Props> = ({ registration, match: initialMatch, 
           cursor: 'pointer', 
           padding: '1rem',
           width: '100%',
-          fontWeight: 800
+          fontWeight: 800,
+          marginTop: '1rem'
         }}
       >
         <ArrowLeft size={16} /> BACK TO FIXTURES
