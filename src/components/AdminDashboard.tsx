@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/database';
-import { Zap, Play, CheckCircle, Trophy, Layout, Square, RotateCw, RefreshCw } from 'lucide-react';
+import { Zap, Play, CheckCircle, Trophy, Layout, Square, RotateCw } from 'lucide-react';
 
 type Match = Database['public']['Tables']['matches']['Row'];
 
@@ -39,7 +39,6 @@ export const AdminDashboard: React.FC = () => {
   const [ranks, setRanks] = useState<Rank[]>([]);
   const [venues, setVenues] = useState<Database['public']['Tables']['venues']['Row'][]>([]);
   const [loading, setLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
 
   const fetchMatches = useCallback(async () => {
     const { data } = await supabase
@@ -116,21 +115,6 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleManualSync = async () => {
-    setIsSyncing(true);
-    try {
-      // Trigger both edge functions
-      await fetch('/functions/v1/sync-ucl-fixtures', { method: 'POST' });
-      await fetch('/functions/v1/update-live-scores', { method: 'POST' });
-      await fetchMatches();
-      alert('System synchronization triggered successfully.');
-    } catch (err) {
-      console.error(err);
-      alert('Sync failed. Check Supabase Edge Function logs.');
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const resetEverything = async () => {
     if (!confirm('☢️ RESET ALL STAMPS AND MATCHES TO ZERO?')) return;
@@ -279,29 +263,7 @@ export const AdminDashboard: React.FC = () => {
         <h1 className="ucl-title" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', letterSpacing: '2px' }}>COMMAND CENTER</h1>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', alignItems: 'center', opacity: 0.6 }}>
           <div className="live-indicator"><div className="live-dot" /> SYSTEM ONLINE</div>
-          <span>•</span>
           <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>{matches.filter(m => m.status === 'LIVE').length} ACTIVE MATCHES</span>
-          <span>•</span>
-          <button 
-            onClick={handleManualSync}
-            disabled={isSyncing}
-            style={{ 
-              background: 'rgba(0, 130, 50, 0.2)', 
-              border: '1px solid var(--ucl-navy)', 
-              color: 'var(--ucl-navy)',
-              fontSize: '0.65rem',
-              padding: '0.4rem 0.8rem',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              fontWeight: 900
-            }}
-          >
-            <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
-            {isSyncing ? 'SYNCING...' : 'SYNC NOW'}
-          </button>
         </div>
       </header>
       
