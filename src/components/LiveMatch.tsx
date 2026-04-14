@@ -272,7 +272,7 @@ export const LiveMatch: React.FC<Props> = ({ registration, onBack }) => {
   };
 
   return (
-    <div className="container" style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(5vh)', gap: '1rem' }}>
+    <div style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       
       {/* Swipe/Match Navigation Controls */}
       {matches.length > 1 && (

@@ -51,7 +51,17 @@ function App() {
     <main style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <nav className="main-nav">
         <div className="nav-container">
-          <span className="nav-title">PREDICT & WIN</span>
+          <div className="nav-top-row">
+            <span className="nav-title">PREDICT & WIN</span>
+            {registration && (
+              <button 
+                className="logout-btn"
+                onClick={resetRegistration} 
+              >
+                LOGOUT
+              </button>
+            )}
+          </div>
           
           {registration && (
             <div className="nav-controls">
@@ -75,12 +85,6 @@ function App() {
                   RANK
                 </button>
               </div>
-              <button 
-                className="logout-btn"
-                onClick={resetRegistration} 
-              >
-                LOGOUT
-              </button>
             </div>
           )}
         </div>
