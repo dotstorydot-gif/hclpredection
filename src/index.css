@@ -490,7 +490,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: calc(14rem + 5vh) 0.5rem 4rem; /* Drastically increased to clear watermark */
+  padding: calc(18rem + 5vh) 0.5rem 4rem; /* Final adjustment to clear watermark */
 }
 
 @media (max-width: 480px) {
