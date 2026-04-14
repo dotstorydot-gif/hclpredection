@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 
 const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
 
-serve(async (req) => {
+serve(async () => {
   try {
     // 1. Fetch matches that are currently LIVE or Starting soon
     const { data: activeMatches } = await supabase
@@ -32,7 +32,7 @@ serve(async (req) => {
     const { response: liveFixtures } = await response.json()
 
     for (const fixtureData of liveFixtures) {
-      const { fixture, goals, teams } = fixtureData
+      const { fixture, goals } = fixtureData
       const localMatch = activeMatches.find(m => m.api_id === fixture.id.toString())
       
       if (!localMatch) continue
@@ -43,7 +43,7 @@ serve(async (req) => {
       const isFinished = fixture.status.short === 'FT' || fixture.status.short === 'AET' || fixture.status.short === 'PEN'
 
       // 3. Update Match State
-      const updates: any = {
+      const updates: { home_score: number; away_score: number; last_sync_at: string; status?: string } = {
         home_score: newHomeScore,
         away_score: newAwayScore,
         last_sync_at: new Date().toISOString()

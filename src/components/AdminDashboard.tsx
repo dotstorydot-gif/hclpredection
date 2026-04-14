@@ -149,7 +149,7 @@ export const AdminDashboard: React.FC = () => {
     const buzzerSub = supabase
       .channel('admin-buzzer')
       .on(
-        'postgres_changes' as any, 
+        'postgres_changes', 
         { event: '*', table: 'buzzer_hits', schema: 'public' }, 
         () => {
           fetchBuzzerHits();
