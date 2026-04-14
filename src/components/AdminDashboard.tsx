@@ -162,12 +162,14 @@ export const AdminDashboard: React.FC = () => {
   }, [fetchMatches, fetchVenues, fetchBuzzerHits, calculateRanks, fetchPlayers]);
 
   const updateMatch = async (matchId: string, updates: Partial<Match>) => {
+    setLoading(true);
     const { error } = await supabase.from('matches').update(updates).eq('id', matchId);
     if (!error) {
-      fetchMatches();
+      await fetchMatches();
     } else {
       alert(`Match Update Error: ${error.message}`);
     }
+    setLoading(false);
   };
 
   const triggerBuzzer = async (matchId: string) => {
@@ -209,6 +211,7 @@ export const AdminDashboard: React.FC = () => {
     const match = matches.find(m => m.id === matchId);
     if (!match) return;
 
+    setLoading(true);
     const updates = side === 'HOME' 
       ? { home_score: (match.home_score || 0) + 1 } 
       : { away_score: (match.away_score || 0) + 1 };
@@ -219,6 +222,7 @@ export const AdminDashboard: React.FC = () => {
     } else {
       alert(`Goal Recording Error: ${error.message}`);
     }
+    setLoading(false);
   };
 
   const wipeAllData = async () => {
@@ -368,8 +372,8 @@ export const AdminDashboard: React.FC = () => {
                       
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         {match.status === 'UPCOMING' && (
-                          <button className="ucl-button" style={{ padding: '0.6rem 1rem', fontSize: '0.65rem' }} onClick={() => updateMatch(match.id, { status: 'LIVE' })}>
-                            <Play size={12} /> INITIATE
+                          <button className="ucl-button" disabled={loading} style={{ padding: '0.6rem 1rem', fontSize: '0.65rem' }} onClick={() => updateMatch(match.id, { status: 'LIVE' })}>
+                            <Play size={12} /> {loading ? 'SAVING...' : 'INITIATE'}
                           </button>
                         )}
                         {match.status === 'LIVE' && (
@@ -398,7 +402,9 @@ export const AdminDashboard: React.FC = () => {
                             onChange={(e) => updateMatch(match.id, { home_score: parseInt(e.target.value) || 0 })} 
                           />
                           {match.status === 'LIVE' && (
-                            <button className="ucl-button goal-button-home" style={{ width: '100%', fontSize: '0.6rem', background: 'var(--ucl-deep-blue)' }} onClick={() => recordGoal(match.id, 'HOME')}>+ GOAL</button>
+                            <button className="ucl-button goal-button-home" disabled={loading} style={{ width: '100%', fontSize: '0.6rem', background: 'var(--ucl-deep-blue)' }} onClick={() => recordGoal(match.id, 'HOME')}>
+                              {loading ? 'SAVING...' : '+ GOAL'}
+                            </button>
                           )}
                         </div>
                       </div>
