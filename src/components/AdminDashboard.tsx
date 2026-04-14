@@ -180,9 +180,11 @@ export const AdminDashboard: React.FC = () => {
     const goalNumber = (match.home_score || 0) + (match.away_score || 0);
 
     // 1. Update DB (source of truth for late joiners)
+    setLoading(true);
     const { error: updError } = await supabase.from('matches').update({ buzzer_active: true }).eq('id', matchId);
     if (updError) {
       alert(`Buzzer Activation Error: ${updError.message}`);
+      setLoading(false);
       return;
     }
 
@@ -199,6 +201,7 @@ export const AdminDashboard: React.FC = () => {
     });
     
     fetchMatches();
+    setLoading(false);
 
     // Auto-reset after 2 minutes
     setTimeout(async () => {
@@ -377,13 +380,13 @@ export const AdminDashboard: React.FC = () => {
                           </button>
                         )}
                         {match.status === 'LIVE' && (
-                          <button className="ucl-button" style={{ padding: '0.6rem 1rem', fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)' }} onClick={() => finishMatch(match.id)}>
-                            <Square size={12} /> FINISH
+                          <button className="ucl-button" disabled={loading} style={{ padding: '0.6rem 1rem', fontSize: '0.65rem', background: 'rgba(255,255,255,0.1)' }} onClick={() => finishMatch(match.id)}>
+                            <Square size={12} /> {loading ? 'SAVING...' : 'FINISH'}
                           </button>
                         )}
                         {match.status === 'FINISHED' && (
-                          <button className="ucl-button" style={{ padding: '0.6rem 1rem', fontSize: '0.65rem', opacity: 0.4 }} onClick={() => updateMatch(match.id, { status: 'UPCOMING', home_score: 0, away_score: 0, processed: false })}>
-                            <RotateCw size={12} /> RESET
+                          <button className="ucl-button" disabled={loading} style={{ padding: '0.6rem 1rem', fontSize: '0.65rem', opacity: 0.4 }} onClick={() => updateMatch(match.id, { status: 'UPCOMING', home_score: 0, away_score: 0, processed: false })}>
+                            <RotateCw size={12} /> {loading ? 'SAVING...' : 'RESET'}
                           </button>
                         )}
                       </div>
@@ -423,7 +426,9 @@ export const AdminDashboard: React.FC = () => {
                             onChange={(e) => updateMatch(match.id, { away_score: parseInt(e.target.value) || 0 })} 
                           />
                           {match.status === 'LIVE' && (
-                            <button className="ucl-button goal-button-away" style={{ width: '100%', fontSize: '0.6rem' }} onClick={() => recordGoal(match.id, 'AWAY')}>+ GOAL</button>
+                            <button className="ucl-button goal-button-away" disabled={loading} style={{ width: '100%', fontSize: '0.6rem' }} onClick={() => recordGoal(match.id, 'AWAY')}>
+                              {loading ? 'SAVING...' : '+ GOAL'}
+                            </button>
                           )}
                         </div>
                       </div>
@@ -432,11 +437,11 @@ export const AdminDashboard: React.FC = () => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
                       {match.status === 'LIVE' && (
                         <>
-                          <button className="ucl-button" style={{ background: 'var(--ucl-gold)', color: 'black' }} onClick={() => triggerBuzzer(match.id)}>
-                            <Zap size={14} /> MANUAL BUZZER
+                          <button className="ucl-button" disabled={loading} style={{ background: 'var(--ucl-gold)', color: 'black' }} onClick={() => triggerBuzzer(match.id)}>
+                            <Zap size={14} /> {loading ? 'SAVING...' : 'MANUAL BUZZER'}
                           </button>
-                          <button className="ucl-button" style={{ background: 'rgba(255,255,255,0.1)' }} onClick={() => finishMatch(match.id)}>
-                            <CheckCircle size={14} /> AWARD STAMPS
+                          <button className="ucl-button" disabled={loading} style={{ background: 'rgba(255,255,255,0.1)' }} onClick={() => finishMatch(match.id)}>
+                            <CheckCircle size={14} /> {loading ? 'SAVING...' : 'AWARD STAMPS'}
                           </button>
                         </>
                       )}
