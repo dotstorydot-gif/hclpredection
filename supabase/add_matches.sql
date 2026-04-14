@@ -1,4 +1,6 @@
--- Clear existing matches to avoid duplicates
+-- Clear existing data to avoid duplicates and FK errors
+DELETE FROM public.buzzer_hits;
+DELETE FROM public.predictions;
 DELETE FROM public.matches;
 
 -- Insert new requested matches

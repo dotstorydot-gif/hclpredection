@@ -3,6 +3,11 @@ INSERT INTO public.venues (name) VALUES
   ('The Villa Hub')
 ON CONFLICT (name) DO NOTHING;
 
+-- Cleanup existing data to avoid duplicates
+DELETE FROM public.buzzer_hits;
+DELETE FROM public.predictions;
+DELETE FROM public.matches;
+
 -- Seed v2: Upcoming and Live Matches with Logos
 INSERT INTO public.matches (home_team, away_team, home_logo, away_logo, kickoff_time, status)
 VALUES 
