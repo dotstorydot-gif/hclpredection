@@ -268,8 +268,8 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="container" style={{ maxWidth: '1200px', width: '95%', margin: '0 auto', paddingBottom: '4rem' }}>
-      <header style={{ padding: '3rem 0', textAlign: 'center' }}>
-        <h1 className="ucl-title" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', letterSpacing: '2px' }}>COMMAND CENTER</h1>
+      <header className="admin-header">
+        <h1 className="ucl-title">COMMAND CENTER</h1>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', alignItems: 'center', opacity: 0.6 }}>
           <div className="live-indicator"><div className="live-dot" /> SYSTEM ONLINE</div>
           <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>{matches.filter(m => m.status === 'LIVE').length} ACTIVE MATCHES</span>
@@ -277,17 +277,7 @@ export const AdminDashboard: React.FC = () => {
       </header>
       
       {/* Premium Tab Navigation */}
-      <nav style={{ 
-        display: 'flex', 
-        gap: '0.4rem', 
-        marginBottom: '3rem', 
-        background: 'rgba(255,255,255,0.03)', 
-        padding: '0.6rem', 
-        borderRadius: '20px',
-        border: '1px solid rgba(255,255,255,0.05)',
-        maxWidth: '750px',
-        margin: '0 auto 3rem auto'
-      }}>
+      <nav className="admin-nav">
         {(['MATCHES', 'BUZZER', 'RANKS', 'PLAYERS'] as const).map(tab => (
           <button 
             key={tab}
@@ -331,7 +321,7 @@ export const AdminDashboard: React.FC = () => {
                 <div style={{ height: '1px', flex: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.1), transparent)' }} />
               </div>
               
-              <div className="admin-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
+              <div className="admin-grid">
                 {dayMatches.map(match => (
                   <div key={match.id} className={`admin-card ${match.buzzer_active ? 'buzzer-active-pulse' : ''}`}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
@@ -394,7 +384,7 @@ export const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="admin-match-teams" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+                    <div className="admin-match-teams">
                       <div style={{ flex: 1, textAlign: 'center' }}>
                         <img src={match.home_logo || ''} alt="" style={{ width: '40px', height: '40px', marginBottom: '0.8rem', opacity: 0.8 }} />
                         <p style={{ fontWeight: 900, fontSize: '0.8rem', marginBottom: '1rem', textTransform: 'uppercase' }}>{match.home_team}</p>
@@ -457,7 +447,7 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === 'BUZZER' && (
-        <div className="buzzer-feed-container" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem', alignItems: 'start' }}>
+        <div className="buzzer-feed-container">
           <div className="admin-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 900 }}>REAL-TIME BUZZER FEED</h2>
@@ -618,7 +608,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div style={{ overflowX: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
+          <div className="table-responsive" style={{ background: 'rgba(0,0,0,0.2)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', minWidth: '600px' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)', opacity: 0.4 }}>
