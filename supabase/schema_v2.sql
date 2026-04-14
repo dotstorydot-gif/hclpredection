@@ -94,4 +94,5 @@ FOR EACH ROW EXECUTE PROCEDURE public.update_updated_at_column();
 
 -- Seed initial venues
 INSERT INTO public.venues (name) VALUES 
-  ('The Villa Hub');
+  ('The Villa Hub')
+ON CONFLICT (name) DO NOTHING;

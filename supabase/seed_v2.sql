@@ -1,6 +1,7 @@
 -- Seed v2: Venues and Interactive Matches
 INSERT INTO public.venues (name) VALUES 
-  ('The Villa Hub');
+  ('The Villa Hub')
+ON CONFLICT (name) DO NOTHING;
 
 -- Seed v2: Upcoming and Live Matches with Logos
 INSERT INTO public.matches (home_team, away_team, home_logo, away_logo, kickoff_time, status)
