@@ -53,8 +53,12 @@ body::before {
 @media (max-width: 768px) {
   body::before {
     /* Optimized Mobile Background with precise watermark alignment */
-    background: linear-gradient(rgba(0, 58, 24, 0.4), rgba(0, 58, 24, 0.4)), url('/background.png') no-repeat center 80px;
+    background: linear-gradient(rgba(0, 58, 24, 0.4), rgba(0, 58, 24, 0.4)), url('/background.png') no-repeat center 40px;
   }
+}
+
+.main-content.registration-layout {
+  padding-top: calc(11rem + 2vh); /* Push card down further on registration to clear watermark */
 }
 
 .glass-card {

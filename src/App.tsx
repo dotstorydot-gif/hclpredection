@@ -90,7 +90,7 @@ function App() {
         </div>
       </nav>
 
-      <div className="main-content">
+      <div className={`main-content ${!registration ? 'registration-layout' : ''}`}>
         {!registration ? (
           <Registration onComplete={handleRegistrationComplete} />
         ) : (
