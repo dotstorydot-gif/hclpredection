@@ -78,7 +78,7 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
   }, [fetchLeaderboard]);
 
   return (
-    <div className="container" style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(6rem + 2vh)' }}>
+    <div style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '1.5rem', width: '100%' }}>
         <button 
           onClick={() => setTab('buzzer')} 
