@@ -44,7 +44,9 @@ export const Registration: React.FC<Props> = ({ onComplete }) => {
       if (error) throw error;
       if (data) onComplete(data);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Registration failed');
+      const err = error as any;
+      const msg = err?.message || err?.details || 'Check your internet and try again!';
+      alert(`Registration Failed: ${msg}`);
     } finally {
       setLoading(false);
     }

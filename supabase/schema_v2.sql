@@ -19,6 +19,10 @@ CREATE TABLE public.registrations (
   name TEXT NOT NULL,
   phone TEXT NOT NULL,
   venue_id UUID REFERENCES public.venues(id) NOT NULL,
+  points INTEGER DEFAULT 0,
+  stamps_login INTEGER DEFAULT 1,
+  stamps_prediction INTEGER DEFAULT 0,
+  stamps_buzzer INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -34,6 +38,7 @@ CREATE TABLE public.matches (
   home_score INTEGER DEFAULT 0,
   away_score INTEGER DEFAULT 0,
   buzzer_active BOOLEAN DEFAULT FALSE,
+  processed BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
