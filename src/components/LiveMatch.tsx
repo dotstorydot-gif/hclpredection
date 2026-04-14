@@ -19,8 +19,13 @@ interface Hit {
   registrations: { name: string } | null;
 }
 
-// Sub-component to manage the specific live match view to isolate the realtime logic per match
-const SingleLiveMatch: React.FC<{ registration: Registration; initialMatch: Match; isActiveView: boolean }> = ({ registration, initialMatch, isActiveView }) => {
+// Sub-component to manage the specific live match view
+const SingleLiveMatch: React.FC<{ 
+  registration: Registration; 
+  initialMatch: Match; 
+  isActiveView: boolean;
+  prediction?: 'HOME' | 'AWAY' | 'DRAW' | null;
+}> = ({ registration, initialMatch, isActiveView, prediction }) => {
   const [localMatch, setLocalMatch] = useState<Match>(initialMatch);
   const [isBuzzerActive, setIsBuzzerActive] = useState(initialMatch.buzzer_active || false);
   const [hasHit, setHasHit] = useState(false);
@@ -121,7 +126,7 @@ const SingleLiveMatch: React.FC<{ registration: Registration; initialMatch: Matc
         return;
       }
       fetchStandings();
-    } catch (e) {
+    } catch {
       setHasHit(false);
       setIsHitting(false);
       alert('Internal game error. Please try again.');
@@ -141,6 +146,22 @@ const SingleLiveMatch: React.FC<{ registration: Registration; initialMatch: Matc
         <h2 style={{ fontSize: '1.4rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem', color: 'white' }}>
           {localMatch.home_team} vs {localMatch.away_team}
         </h2>
+
+        {prediction && (
+          <div style={{ 
+            display: 'inline-block',
+            margin: '0.5rem 0 1rem',
+            padding: '0.4rem 1rem',
+            background: 'var(--ucl-electric)',
+            color: 'black',
+            borderRadius: '8px',
+            fontSize: '0.75rem',
+            fontWeight: 900,
+            letterSpacing: '1px'
+          }}>
+            YOUR PICK: {prediction === 'DRAW' ? 'THE DRAW' : prediction === 'HOME' ? localMatch.home_team.toUpperCase() : localMatch.away_team.toUpperCase()}
+          </div>
+        )}
         
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2.5rem', margin: '2rem 0', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -233,22 +254,47 @@ const SingleLiveMatch: React.FC<{ registration: Registration; initialMatch: Matc
 
 export const LiveMatch: React.FC<Props> = ({ registration, onBack }) => {
   const [matches, setMatches] = useState<Match[]>([]);
+  const [userPredictions, setUserPredictions] = useState<Record<string, string>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMatches = async () => {
-      // Get all matches for today or just the scheduled ones
+      // Get all predictions for this registration
+      const { data: predData } = await supabase
+        .from('predictions')
+        .select('match_id, winner_choice')
+        .eq('registration_id', registration.id);
+
+      const predMap: Record<string, string> = {};
+      const predictedMatchIds: string[] = [];
+      
+      predData?.forEach(p => {
+        if (p.winner_choice) {
+          predMap[p.match_id] = p.winner_choice;
+          predictedMatchIds.push(p.match_id);
+        }
+      });
+      setUserPredictions(predMap);
+
+      if (predictedMatchIds.length === 0) {
+        setMatches([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get only the matches the user predicted
       const { data } = await supabase
         .from('matches')
         .select('*')
+        .in('id', predictedMatchIds)
         .order('kickoff_time', { ascending: true });
         
       setMatches(data || []);
       setLoading(false);
     };
     fetchMatches();
-  }, []);
+  }, [registration.id]);
 
   if (loading) {
     return <div className="container" style={{ textAlign: 'center', marginTop: '10vh' }}>Loading matches...</div>;
@@ -300,6 +346,7 @@ export const LiveMatch: React.FC<Props> = ({ registration, onBack }) => {
           registration={registration} 
           initialMatch={match} 
           isActiveView={index === currentIndex} 
+          prediction={userPredictions[match.id] as 'HOME' | 'AWAY' | 'DRAW'}
         />
       ))}
 

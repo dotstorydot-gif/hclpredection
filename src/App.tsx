@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
+import { Trophy } from 'lucide-react';
 import { Registration } from './components/Registration';
 import { MatchSelection } from './components/MatchSelection';
 import { LiveMatch } from './components/LiveMatch';
@@ -13,6 +15,36 @@ function App() {
     const saved = localStorage.getItem('ucl_registration');
     return saved ? JSON.parse(saved) : null;
   });
+
+  // Polling for the latest registration data (stamps, points)
+  useEffect(() => {
+    if (!registration) return;
+
+    const fetchLatestReg = async () => {
+      if (!registration) return;
+      const { data } = await supabase
+        .from('registrations')
+        .select('*')
+        .eq('id', registration.id)
+        .single();
+      
+      // Update only if data changed to avoid infinite cycles
+      if (data && (
+        data.stamps_login !== registration.stamps_login ||
+        data.stamps_prediction !== registration.stamps_prediction ||
+        data.stamps_buzzer !== registration.stamps_buzzer ||
+        data.points !== registration.points
+      )) {
+        setRegistration(data);
+        localStorage.setItem('ucl_registration', JSON.stringify(data));
+      }
+    };
+
+    const interval = setInterval(fetchLatestReg, 10000); // Poll every 10s
+    fetchLatestReg(); // Initial fetch
+
+    return () => clearInterval(interval);
+  }, [registration]);
 
   const [isAdmin] = useState(() => 
     window.location.hash === '#admin' || window.location.pathname === '/admin'
@@ -40,19 +72,41 @@ function App() {
     localStorage.removeItem('ucl_registration');
     localStorage.removeItem('ucl_view');
     setRegistration(null);
-    setView('selection');
+    setViewState('selection');
   };
 
   if (isAdmin) {
     return <AdminDashboard />;
   }
 
+  const totalStamps = registration 
+    ? (registration.stamps_login + registration.stamps_prediction + registration.stamps_buzzer) 
+    : 0;
+
   return (
     <main style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <nav className="main-nav">
         <div className="nav-container">
           <div className="nav-top-row">
-            <span className="nav-title">PREDICT & WIN</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <span className="nav-title">PREDICT & WIN</span>
+              {registration && (
+                <div style={{ 
+                  background: 'var(--ucl-gold)', 
+                  color: 'black', 
+                  padding: '2px 8px', 
+                  borderRadius: '4px', 
+                  fontSize: '0.65rem', 
+                  fontWeight: 900,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <Trophy size={10} />
+                  {totalStamps} STAMPS
+                </div>
+              )}
+            </div>
             {registration && (
               <button 
                 className="logout-btn"
