@@ -16,6 +16,35 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
+  const [isAdmin] = useState(() => 
+    window.location.hash === '#admin' || window.location.pathname === '/admin'
+  );
+
+  const [view, setViewState] = useState<'selection' | 'live' | 'leaderboard'>(() => {
+    const savedView = localStorage.getItem('ucl_view');
+    if (savedView === 'selection' || savedView === 'live' || savedView === 'leaderboard') {
+      return savedView;
+    }
+    return 'selection';
+  });
+
+  const resetRegistration = () => {
+    localStorage.removeItem('ucl_registration');
+    localStorage.removeItem('ucl_view');
+    setRegistration(null);
+    setViewState('selection');
+  };
+
+  const setView = (v: 'selection' | 'live' | 'leaderboard') => {
+    setViewState(v);
+    localStorage.setItem('ucl_view', v);
+  };
+
+  const handleRegistrationComplete = (data: RegistrationType) => {
+    setRegistration(data);
+    localStorage.setItem('ucl_registration', JSON.stringify(data));
+  };
+
   // Polling for the latest registration data (stamps, points)
   useEffect(() => {
     if (!registration) return;
@@ -27,6 +56,12 @@ function App() {
         .select('*')
         .eq('id', registration.id)
         .single();
+      
+      if (!data) {
+        // Record was deleted (e.g. database wipe) - logout the user
+        resetRegistration();
+        return;
+      }
       
       // Update only if data changed to avoid infinite cycles
       if (data && (
@@ -45,35 +80,6 @@ function App() {
 
     return () => clearInterval(interval);
   }, [registration]);
-
-  const [isAdmin] = useState(() => 
-    window.location.hash === '#admin' || window.location.pathname === '/admin'
-  );
-
-  const [view, setViewState] = useState<'selection' | 'live' | 'leaderboard'>(() => {
-    const savedView = localStorage.getItem('ucl_view');
-    if (savedView === 'selection' || savedView === 'live' || savedView === 'leaderboard') {
-      return savedView;
-    }
-    return 'selection';
-  });
-
-  const setView = (v: 'selection' | 'live' | 'leaderboard') => {
-    setViewState(v);
-    localStorage.setItem('ucl_view', v);
-  };
-
-  const handleRegistrationComplete = (data: RegistrationType) => {
-    setRegistration(data);
-    localStorage.setItem('ucl_registration', JSON.stringify(data));
-  };
-
-  const resetRegistration = () => {
-    localStorage.removeItem('ucl_registration');
-    localStorage.removeItem('ucl_view');
-    setRegistration(null);
-    setViewState('selection');
-  };
 
   if (isAdmin) {
     return <AdminDashboard />;
