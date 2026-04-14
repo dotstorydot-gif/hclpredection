@@ -7,16 +7,16 @@ VALUES
   (
     'Atlético Madrid', 
     'Barcelona', 
-    'https://upload.wikimedia.org/wikipedia/en/c/c1/Atletico_Madrid_logo.svg', 
-    'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg', 
+    'https://img.uefa.com/imgml/TP/teams/logos/70x70/50124.png', 
+    'https://img.uefa.com/imgml/TP/teams/logos/70x70/50080.png', 
     '2026-04-14T19:00:00Z', 
     'UPCOMING'
   ),
   (
     'Liverpool', 
     'PSG', 
-    'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC_logo.svg', 
-    'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg', 
+    'https://img.uefa.com/imgml/TP/teams/logos/70x70/7889.png', 
+    'https://img.uefa.com/imgml/TP/teams/logos/70x70/52747.png',  
     '2026-04-14T19:00:00Z', 
     'UPCOMING'
   );
