@@ -93,7 +93,7 @@ export const MatchSelection: React.FC<Props> = ({ registration, onGoToLive }) =>
       fetchData(); // Refresh to show the new pick
       // Do not auto navigate to LIVE, let the user pick others.
     } catch (error) {
-      const err = error as any;
+      const err = error as Error & { details?: string };
       const msg = err?.message || err?.details || 'Database sync error. Check your signal!';
       console.error('MatchSelection Error:', error);
       alert(`Prediction Failed: ${msg}`);
