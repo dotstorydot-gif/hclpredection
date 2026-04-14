@@ -36,6 +36,8 @@ body {
   -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .glass-card {
@@ -369,13 +371,8 @@ body {
 
 /* Responsive Admin Dashboard */
 @media (max-width: 768px) {
-  .ucl-title {
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-  }
-
   header {
-    padding: 1.5rem 0 !important;
+    padding: calc(2rem + env(safe-area-inset-top)) 0 1.5rem 0 !important;
   }
 
   nav {

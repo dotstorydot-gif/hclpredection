@@ -78,8 +78,8 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
   }, [fetchLeaderboard]);
 
   return (
-    <div className="container" style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(10vh - 20px)' }}>
-      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', width: '100%' }}>
+    <div className="container" style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 'calc(6rem + 2vh)' }}>
+      <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '1.5rem', width: '100%' }}>
         <button 
           onClick={() => setTab('buzzer')} 
           className={`ucl-button ${tab === 'buzzer' ? '' : 'inactive'}`}
@@ -97,7 +97,7 @@ export const Leaderboard: React.FC<Props> = ({ registration, onBack }) => {
         <button 
           onClick={() => setTab('prediction')} 
           className={`ucl-button ${tab === 'prediction' ? '' : 'inactive'}`}
-          style={{ flex: 1, fontSize: '0.6rem', padding: '0.7rem 0.3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}
+          style={{ flex: 1, fontSize: '0.55rem', padding: '0.6rem 0.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem' }}
         >
           <Target size={12} /> PREDICTION
         </button>

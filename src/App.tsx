@@ -58,51 +58,52 @@ function App() {
         display: 'flex', 
         justifyContent: 'center', // Center title
         alignItems: 'center', 
-        padding: '1rem 1.5rem', 
+        padding: 'calc(0.8rem + env(safe-area-inset-top)) 1rem 0.8rem 1rem', 
         flexShrink: 0
       }}>
         <span style={{ 
-          fontWeight: 800, 
-          letterSpacing: '1px', 
-          fontSize: '1rem', 
+          fontWeight: 900, 
+          letterSpacing: '1.5px', 
+          fontSize: '0.75rem', 
           color: 'white', 
           textTransform: 'uppercase',
           position: registration ? 'static' : 'absolute',
           left: registration ? 'auto' : '50%',
           transform: registration ? 'none' : 'translateX(-50%)',
-          width: registration ? 'auto' : 'max-content'
+          width: registration ? 'auto' : 'max-content',
+          whiteSpace: 'nowrap'
         }}>
-          PREDICT AND WIN
+          PREDICT & WIN
         </span>
         
         {registration && (
-          <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginLeft: 'auto' }}>
-            <div style={{ display: 'flex', gap: '0.3rem' }}>
+          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginLeft: 'auto' }}>
+            <div style={{ display: 'flex', gap: '0.2rem' }}>
               <button 
                 onClick={() => setView('selection')} 
                 className={`ucl-button ${view === 'selection' ? '' : 'inactive'}`}
-                style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
+                style={{ padding: '0.4rem 0.5rem', fontSize: '0.55rem' }}
               >
                 GAMES
               </button>
               <button 
                 onClick={() => setView('live')} 
                 className={`ucl-button ${view === 'live' ? '' : 'inactive'}`}
-                style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
+                style={{ padding: '0.4rem 0.5rem', fontSize: '0.55rem' }}
               >
                 LIVE
               </button>
               <button 
                 onClick={() => setView('leaderboard')} 
                 className={`ucl-button ${view === 'leaderboard' ? '' : 'inactive'}`}
-                style={{ padding: '0.4rem 0.6rem', fontSize: '0.6rem' }}
+                style={{ padding: '0.4rem 0.5rem', fontSize: '0.55rem' }}
               >
-                RANKS
+                RANK
               </button>
             </div>
             <button 
               onClick={resetRegistration} 
-              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', textDecoration: 'underline', fontSize: '0.6rem', cursor: 'pointer', fontWeight: 700 }}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', textDecoration: 'underline', fontSize: '0.55rem', cursor: 'pointer', fontWeight: 700 }}
             >
               LOGOUT
             </button>
