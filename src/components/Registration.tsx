@@ -30,39 +30,20 @@ export const Registration: React.FC<Props> = ({ onComplete }) => {
     
     setLoading(true);
     try {
-      // 1. Check if user already exists with this phone
-      const { data: existing } = await supabase
-        .from('registrations')
-        .select()
-        .eq('phone', phone)
-        .single();
-      
-      if (existing) {
-        // Resume session
-        onComplete(existing);
-        return;
-      }
-
-      // 2. If not, create new
+      // Use upsert to either create a new registration or retrieve an existing one atomically
+      // This is bulletproof against "duplicate key" errors.
       const { data, error } = await supabase
         .from('registrations')
-        .insert({
+        .upsert({
           name,
           phone,
           venue_id: selectedVenue,
           stamps_login: 1
-        })
+        }, { onConflict: 'phone' })
         .select()
         .single();
 
-      if (error) {
-        if (error.code === '23505') { // Race condition double-check
-           // Fallback to fetch again if conflict happened just now
-           const { data: retry } = await supabase.from('registrations').select().eq('phone', phone).single();
-           if (retry) { onComplete(retry); return; }
-        }
-        throw error;
-      }
+      if (error) throw error;
       if (data) onComplete(data);
     } catch (error) {
       console.error('Registration Error:', error);
