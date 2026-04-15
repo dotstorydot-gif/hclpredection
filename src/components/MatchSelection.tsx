@@ -59,8 +59,8 @@ export const MatchSelection: React.FC<Props> = ({ registration, onGoToLive }) =>
     const kickoff = new Date(match.kickoff_time);
     const now = new Date();
     const diffInMinutes = (now.getTime() - kickoff.getTime()) / (1000 * 60);
-    // Lock if match started more than 60 minutes ago
-    return diffInMinutes > 60;
+    // Lock if match started more than 75 minutes ago
+    return diffInMinutes > 75;
   };
 
   const handlePredict = async () => {

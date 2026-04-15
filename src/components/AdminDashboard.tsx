@@ -81,7 +81,22 @@ export const AdminDashboard: React.FC = () => {
       .from('registrations')
       .select('*, venues(name)')
       .order('created_at', { ascending: false });
-    setPlayers(data || []);
+      
+    if (data) {
+      const sorted = [...data].sort((a, b) => {
+        const totalA = (a.stamps_login || 0) + (a.stamps_prediction || 0) + (a.stamps_buzzer || 0);
+        const totalB = (b.stamps_login || 0) + (b.stamps_prediction || 0) + (b.stamps_buzzer || 0);
+        
+        // Primary sort: Total Stamps DESC
+        if (totalB !== totalA) return totalB - totalA;
+        
+        // Secondary sort: Date DESC (Newest first)
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      setPlayers(sorted);
+    } else {
+      setPlayers([]);
+    }
   }, []);
 
   const finishMatch = async (matchId: string) => {
