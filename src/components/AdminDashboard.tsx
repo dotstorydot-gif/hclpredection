@@ -629,6 +629,7 @@ export const AdminDashboard: React.FC = () => {
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)', opacity: 0.4 }}>
                   <th style={{ padding: '1rem' }}>PARTICIPANT</th>
                   <th style={{ padding: '1rem' }}>VENUE</th>
+                  <th style={{ padding: '1rem', textAlign: 'center' }}>DATE</th>
                   <th style={{ padding: '1rem', textAlign: 'center' }}>LOGIN</th>
                   <th style={{ padding: '1rem', textAlign: 'center' }}>PRED</th>
                   <th style={{ padding: '1rem', textAlign: 'center' }}>BUZZER</th>
@@ -644,6 +645,9 @@ export const AdminDashboard: React.FC = () => {
                       </td>
                       <td style={{ padding: '1rem' }}>
                         <span className="venue-badge">{p.venues?.name || 'Unknown'}</span>
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center', opacity: 0.6 }}>
+                        {new Date(p.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>{p.stamps_login || 0}</td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>{p.stamps_prediction || 0}</td>
