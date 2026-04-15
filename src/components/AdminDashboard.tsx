@@ -36,6 +36,7 @@ export const AdminDashboard: React.FC = () => {
   const [buzzerHits, setBuzzerHits] = useState<BuzzerHit[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [selectedVenueFilter, setSelectedVenueFilter] = useState<string>('ALL');
+  const [selectedDateFilter, setSelectedDateFilter] = useState<string>('ALL');
   const [ranks, setRanks] = useState<Rank[]>([]);
   const [venues, setVenues] = useState<Database['public']['Tables']['venues']['Row'][]>([]);
   const [loading, setLoading] = useState(true);
@@ -267,11 +268,17 @@ export const AdminDashboard: React.FC = () => {
 
   const [playerSearchQuery, setPlayerSearchQuery] = useState('');
 
+  const uniquePlayerDates = Array.from(new Set(players.map(p => 
+    new Date(p.created_at).toLocaleDateString('en-CA') // YYYY-MM-DD
+  ))).sort((a,b) => b.localeCompare(a));
+
   const filteredPlayers = players.filter(p => {
     const matchesVenue = selectedVenueFilter === 'ALL' || p.venue_id === selectedVenueFilter;
+    const playerDate = new Date(p.created_at).toLocaleDateString('en-CA');
+    const matchesDate = selectedDateFilter === 'ALL' || playerDate === selectedDateFilter;
     const matchesSearch = p.name.toLowerCase().includes(playerSearchQuery.toLowerCase()) || 
                           p.phone.includes(playerSearchQuery);
-    return matchesVenue && matchesSearch;
+    return matchesVenue && matchesDate && matchesSearch;
   });
 
   if (loading) return (
@@ -594,33 +601,49 @@ export const AdminDashboard: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 900 }}>PLAYER COMMAND LIST ({filteredPlayers.length})</h2>
             
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              {/* Search Filter */}
-              <div style={{ position: 'relative', width: '250px' }}>
-                <input 
-                  type="text" 
-                  className="ucl-input" 
-                  placeholder="Search name or phone..." 
-                  value={playerSearchQuery}
-                  onChange={(e) => setPlayerSearchQuery(e.target.value)}
-                  style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}
-                />
-              </div>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Search Filter */}
+                <div style={{ position: 'relative', width: '250px' }}>
+                  <input 
+                    type="text" 
+                    className="ucl-input" 
+                    placeholder="Search name or phone..." 
+                    value={playerSearchQuery}
+                    onChange={(e) => setPlayerSearchQuery(e.target.value)}
+                    style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}
+                  />
+                </div>
 
-              {/* Venue Filter */}
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 900, opacity: 0.5 }}>VENUE:</span>
-                <select 
-                  className="ucl-input" 
-                  value={selectedVenueFilter}
-                  onChange={(e) => setSelectedVenueFilter(e.target.value)}
-                  style={{ width: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                >
-                  <option value="ALL">ALL VENUES</option>
-                  {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                </select>
+                {/* Date Filter */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 900, opacity: 0.5 }}>DATE:</span>
+                  <select 
+                    className="ucl-input" 
+                    value={selectedDateFilter}
+                    onChange={(e) => setSelectedDateFilter(e.target.value)}
+                    style={{ width: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                  >
+                    <option value="ALL">ALL DATES</option>
+                    {uniquePlayerDates.map(d => (
+                      <option key={d} value={d}>{new Date(d).toLocaleDateString([], { month: 'short', day: 'numeric' })}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Venue Filter */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 900, opacity: 0.5 }}>VENUE:</span>
+                  <select 
+                    className="ucl-input" 
+                    value={selectedVenueFilter}
+                    onChange={(e) => setSelectedVenueFilter(e.target.value)}
+                    style={{ width: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                  >
+                    <option value="ALL">ALL VENUES</option>
+                    {venues.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                  </select>
+                </div>
               </div>
-            </div>
           </div>
           
           <div className="table-responsive" style={{ background: 'rgba(0,0,0,0.2)' }}>
