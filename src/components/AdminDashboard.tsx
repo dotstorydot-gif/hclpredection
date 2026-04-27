@@ -298,6 +298,29 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </header>
       
+      {/* Stats Bar */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+        gap: '1.5rem', 
+        marginBottom: '2rem' 
+      }}>
+        <div className="admin-card" style={{ padding: '1.5rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <p style={{ fontSize: '0.65rem', fontWeight: 900, opacity: 0.4, letterSpacing: '2px', marginBottom: '0.5rem' }}>TOTAL PLAYERS</p>
+          <h3 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--ucl-gold)' }}>{players.length}</h3>
+        </div>
+        <div className="admin-card" style={{ padding: '1.5rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <p style={{ fontSize: '0.65rem', fontWeight: 900, opacity: 0.4, letterSpacing: '2px', marginBottom: '0.5rem' }}>TOTAL GIFTS (STAMPS)</p>
+          <h3 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--ucl-gold)' }}>
+            {players.reduce((sum, p) => sum + (p.stamps_login || 0) + (p.stamps_prediction || 0) + (p.stamps_buzzer || 0), 0)}
+          </h3>
+        </div>
+        <div className="admin-card" style={{ padding: '1.5rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <p style={{ fontSize: '0.65rem', fontWeight: 900, opacity: 0.4, letterSpacing: '2px', marginBottom: '0.5rem' }}>ACTIVE VENUES</p>
+          <h3 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--ucl-gold)' }}>{venues.length}</h3>
+        </div>
+      </div>
+
       {/* Premium Tab Navigation */}
       <nav className="admin-nav">
         {(['MATCHES', 'BUZZER', 'RANKS', 'PLAYERS'] as const).map(tab => (
