@@ -307,13 +307,52 @@ export const MatchSelection: React.FC<Props> = ({ registration, onGoToLive }) =>
     );
   }
 
+  const getHeaderLabel = (dateStr: string) => {
+    const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long' }).toUpperCase();
+    const tomorrowDate = new Date();
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrow = tomorrowDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long' }).toUpperCase();
+
+    if (dateStr === today) return "TODAY'S FIXTURE";
+    if (dateStr === tomorrow) return "TOMORROW'S FIXTURE";
+    return dateStr;
+  };
+
   return (
     <div style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ width: '100%', padding: '1rem' }}>
+        
+        {/* Date Selector Tabs */}
+        {dates.length > 1 && (
+          <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2rem', overflowX: 'auto', width: '100%', paddingBottom: '0.5rem' }}>
+            {dates.map(date => (
+              <button
+                key={date}
+                onClick={() => setSelectedDate(date)}
+                style={{
+                  padding: '0.6rem 1.2rem',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: selectedDate === date ? 'var(--ucl-electric)' : 'rgba(255,255,255,0.05)',
+                  color: selectedDate === date ? 'black' : 'white',
+                  fontSize: '0.7rem',
+                  fontWeight: 900,
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {date === new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long' }).toUpperCase() ? 'TODAY' : 
+                 date === new Date(Date.now() + 86400000).toLocaleDateString('en-US', { day: 'numeric', month: 'long' }).toUpperCase() ? 'TOMORROW' : date}
+              </button>
+            ))}
+          </div>
+        )}
+
         {selectedDate && groupedMatches[selectedDate] ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center' }}>
             <h3 style={{ fontSize: '1rem', color: 'white', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '1rem', textAlign: 'center', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '0.8rem', width: '100%' }}>
-              TODAY'S MATCH
+              {getHeaderLabel(selectedDate)}
             </h3>
             {groupedMatches[selectedDate].map(match => {
               const userChoice = getUserChoice(match.id);
