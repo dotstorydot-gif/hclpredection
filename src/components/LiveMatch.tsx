@@ -283,11 +283,12 @@ export const LiveMatch: React.FC<Props> = ({ registration, onBack }) => {
         return;
       }
 
-      // Get only the matches the user predicted
+      // Get only the matches the user predicted that are not finished
       const { data } = await supabase
         .from('matches')
         .select('*')
         .in('id', predictedMatchIds)
+        .neq('status', 'FINISHED')
         .order('kickoff_time', { ascending: true });
         
       setMatches(data || []);

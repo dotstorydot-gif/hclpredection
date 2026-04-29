@@ -60,6 +60,7 @@ CREATE TABLE public.buzzer_hits (
   registration_id UUID REFERENCES public.registrations(id) ON DELETE CASCADE,
   venue_id UUID REFERENCES public.venues(id) ON DELETE CASCADE,
   hit_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  goal_number INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
